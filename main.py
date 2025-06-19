@@ -822,8 +822,8 @@ async def dashboard():
             body {{ 
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                 margin: 0; 
-                padding: 20px; 
-                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%); 
+                padding: 45px; 
+                background: #fff9c4; 
                 min-height: 100vh; 
             }}
             .container {{ max-width: 1200px; margin: 0 auto; }}
@@ -901,7 +901,7 @@ async def dashboard():
                 font-size: 0.8em; 
                 font-weight: bold;
             }}
-            .action-buttons {{ margin: 20px 0; text-align: center; }}
+            .action-buttons {{ padding: 30px; margin: 20px 0; text-align: center; }}
             .btn {{ 
                 background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%); 
                 color: white; 
@@ -923,6 +923,14 @@ async def dashboard():
                 background: linear-gradient(135deg, #ffa726 0%, #ffb74d 100%);
                 color: #1565c0;
                 font-weight: bold;
+            }}
+            /* 実行ボタン専用の大きく丸いスタイル */
+            #process-btn {{
+                border-radius: 40px !important;
+                padding: 22px 48px !important;
+                font-size: 1.5em !important;
+                font-weight: bold !important;
+                box-shadow: 0 6px 24px rgba(255, 167, 38, 0.18);
             }}
             .priority-high {{ border-left-color: #e74c3c; }}
             .priority-medium {{ border-left-color: #ffa726; }}
@@ -977,18 +985,14 @@ async def dashboard():
                             <div class="stat-number">{stats.get('completed_emails', 0)}</div>
                             <div class="stat-label">完了済み</div>
                         </a>
-                        <div class="stat-box" style="background: linear-gradient(135deg, #ffa726 0%, #ffb74d 100%); color: #1565c0;">
-                            <div class="stat-number">{stats.get('total_emails', 0)}</div>
-                            <div class="stat-label">総メール数</div>
-                        </div>
                     </div>
                     
                     <div class="action-buttons">
                         <button id="process-btn" class="btn btn-success" onclick="processEmails()">実行</button>
                     </div>
 
-                    <h4 style="color: #1976d2;">優先度別分布</h4>
-                    <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                    <h3 style="color: #1976d2;">優先度別</h3>
+                    <div style="display: flex; justify-content: space-around; margin: 50px 0;">
                         <a href="/priority/high" style="text-decoration: none; color: inherit;">
                             <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #ffebee; border: 2px solid #e74c3c;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                                 <div style="font-size: 2em; color: #e74c3c; font-weight: bold;">{stats.get('priority_stats', {}).get('高', 0)}</div>
@@ -1011,7 +1015,7 @@ async def dashboard():
                 </div>
                 
                 <div class="main-content">
-                    <h3 style="color: #1976d2;">📁 カテゴリ別メール</h3>
+                    <h3 style="color: #1976d2;">カテゴリ別メール</h3>
                     <ul class="category-list">
                         {_generate_category_list(categories, stats)}
                     </ul>
