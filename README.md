@@ -15,7 +15,7 @@ ProfMailは、大学教授や研究者向けに設計されたAIメール管理�
 ## ディレクトリ構成
 
 ```
-g-task/
+ProfMail/
   ├── main.py                # メインアプリケーション（FastAPI）
   ├── requirements.txt       # 必要なPythonパッケージ
   ├── README.md              # このファイル
@@ -32,7 +32,7 @@ g-task/
 
 ```bash
 git clone <このリポジトリのURL>
-cd g-task
+cd ProfMail
 ```
 
 2. **Python仮想環境の作成・有効化（推奨）**
@@ -48,7 +48,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. **Google CloudでGmail APIの認証情報（credentials.json）を取得し、g-taskディレクトリ直下に配置**
+4. **Google CloudでGmail APIの認証情報（credentials.json）を取得し、ProfMailディレクトリ直下に配置**
    - [Google Cloud Console](https://console.cloud.google.com/) でOAuth2クライアントIDを作成し、`credentials.json`をダウンロードしてください。
 
 5. **環境変数ファイル（.env）を作成**
