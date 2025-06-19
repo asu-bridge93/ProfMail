@@ -605,7 +605,7 @@ urgency_score採点基準：
 
 # FastAPI アプリケーション
 app = FastAPI(
-    title="Professor Email Assistant",
+    title="ProfMail",
     description="大学教授向けメール管理・返信支援システム",
     version="3.0.0"
 )
@@ -639,15 +639,15 @@ def _generate_email_cards(emails):
             reply_section = f'''<div class="reply-preview">
                 <h5>🤖 AI返信草案</h5>
                 <div class="reply-tabs">
-                    <button class="tab-btn active" onclick="showReplyTab('{email_id}', 'preview')">プレビュー</button>
-                    <button class="tab-btn" onclick="showReplyTab('{email_id}', 'markdown')">マークダウン</button>
+                    <button class="tab-btn active" onclick="showReplyTab('{email_id}', 'preview')">👁️ プレビュー</button>
+                    <button class="tab-btn" onclick="showReplyTab('{email_id}', 'markdown')">📝 編集可能</button>
+                    <button class="copy-actions copy-btn-quick" onclick="copyToClipboard('{email_id}')">📋 ワンクリックコピー</button>
                 </div>
                 <div id="reply-preview-{email_id}" class="reply-content active">
                     <div class="reply-text">{reply_html}</div>
                 </div>
                 <div id="reply-markdown-{email_id}" class="reply-content">
-                    <textarea class="markdown-text" readonly>{reply_draft}</textarea>
-                    <button class="copy-btn" onclick="copyToClipboard('{email_id}')">📋 コピー</button>
+                    <textarea id="markdown-textarea-{email_id}" class="markdown-text">{reply_draft}</textarea>
                 </div>
             </div>'''
         
@@ -679,13 +679,13 @@ def _generate_email_cards(emails):
             <div class="email-header priority-{priority.lower()}">
                 <div class="email-subject">{subject}</div>
                 <div class="email-meta">
-                    📤 From: {sender_display}<br>
-                    📅 Date: {date[:25]}<br>
-                    🔥 Priority: {priority} 
+                    From: {sender_display}<br>
+                    Date: {date[:25]}<br>
+                    Priority: {priority} 
                     <span class="urgency-score">緊急度: {urgency_score}/10</span>
                 </div>
                 <div class="email-summary">
-                    📝 {content_display}
+                    {content_display}
                 </div>
                 {reply_section}
             </div>
@@ -815,34 +815,119 @@ async def dashboard():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Professor Email Assistant</title>
+        <title>ProfMail</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }}
+            body {{ 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%); 
+                min-height: 100vh; 
+            }}
             .container {{ max-width: 1200px; margin: 0 auto; }}
-            .header {{ text-align: center; color: white; margin-bottom: 30px; }}
-            .header h1 {{ font-size: 2.5em; margin-bottom: 10px; }}
-            .header p {{ font-size: 1.2em; opacity: 0.9; }}
+            .header {{ 
+                text-align: center; 
+                color: #1565c0; 
+                margin-bottom: 30px; 
+                background: white;
+                padding: 20px;
+                border-radius: 15px;
+                box-shadow: 0 8px 32px rgba(21, 101, 192, 0.1);
+                border: 2px solid #ffd54f;
+            }}
+            .header h1 {{ 
+                font-size: 2.5em; 
+                margin-bottom: 10px; 
+                background: linear-gradient(45deg, #1565c0, #ffa726);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }}
+            .header p {{ font-size: 1.2em; opacity: 0.8; color: #1565c0; }}
             .dashboard {{ display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }}
-            .sidebar {{ background: white; border-radius: 15px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }}
-            .main-content {{ background: white; border-radius: 15px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }}
+            .sidebar {{ 
+                background: white; 
+                border-radius: 15px; 
+                padding: 20px; 
+                box-shadow: 0 8px 32px rgba(21, 101, 192, 0.1);
+                border: 1px solid #e3f2fd;
+            }}
+            .main-content {{ 
+                background: white; 
+                border-radius: 15px; 
+                padding: 20px; 
+                box-shadow: 0 8px 32px rgba(21, 101, 192, 0.1);
+                border: 1px solid #e3f2fd;
+            }}
             .stats-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }}
-            .stat-box {{ background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); padding: 20px; border-radius: 10px; text-align: center; color: white; }}
+            .stat-box {{ 
+                background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%); 
+                padding: 20px; 
+                border-radius: 10px; 
+                text-align: center; 
+                color: white;
+                text-decoration: none;
+                transition: transform 0.3s ease;
+                border: 2px solid #ffd54f;
+            }}
+            .stat-box:hover {{ transform: translateY(-3px); }}
             .stat-number {{ font-size: 2em; font-weight: bold; }}
             .stat-label {{ font-size: 0.9em; opacity: 0.9; }}
             .category-list {{ list-style: none; padding: 0; }}
-            .category-item {{ background: #f8f9fa; margin: 10px 0; padding: 15px; border-radius: 8px; cursor: pointer; transition: all 0.3s; border-left: 4px solid #667eea; }}
-            .category-item:hover {{ transform: translateX(5px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+            .category-item {{ 
+                background: #f8f9fa; 
+                margin: 10px 0; 
+                padding: 15px; 
+                border-radius: 8px; 
+                cursor: pointer; 
+                transition: all 0.3s; 
+                border-left: 4px solid #1976d2;
+                border: 1px solid #e3f2fd;
+            }}
+            .category-item:hover {{ 
+                transform: translateX(5px); 
+                box-shadow: 0 4px 12px rgba(21, 101, 192, 0.2);
+                background: #e3f2fd;
+            }}
             .category-icon {{ font-size: 1.5em; margin-right: 10px; }}
-            .category-count {{ float: right; background: #667eea; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; }}
+            .category-count {{ 
+                float: right; 
+                background: #ffa726; 
+                color: white; 
+                padding: 4px 8px; 
+                border-radius: 12px; 
+                font-size: 0.8em; 
+                font-weight: bold;
+            }}
             .action-buttons {{ margin: 20px 0; text-align: center; }}
-            .btn {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; margin: 5px; text-decoration: none; display: inline-block; transition: all 0.3s; }}
-            .btn:hover {{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }}
-            .btn-success {{ background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }}
+            .btn {{ 
+                background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%); 
+                color: white; 
+                padding: 12px 24px; 
+                border: none; 
+                border-radius: 25px; 
+                cursor: pointer; 
+                margin: 5px; 
+                text-decoration: none; 
+                display: inline-block; 
+                transition: all 0.3s;
+                border: 2px solid #ffd54f;
+            }}
+            .btn:hover {{ 
+                transform: translateY(-2px); 
+                box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+            }}
+            .btn-success {{ 
+                background: linear-gradient(135deg, #ffa726 0%, #ffb74d 100%);
+                color: #1565c0;
+                font-weight: bold;
+            }}
             .priority-high {{ border-left-color: #e74c3c; }}
-            .priority-medium {{ border-left-color: #f39c12; }}
-            .priority-low {{ border-left-color: #95a5a6; }}
+            .priority-medium {{ border-left-color: #ffa726; }}
+            .priority-low {{ border-left-color: #66bb6a; }}
+            .clickable {{ cursor: pointer; }}
         </style>
         <script>
             async function processEmails() {{
@@ -875,74 +960,63 @@ async def dashboard():
     <body>
         <div class="container">
             <div class="header">
-                <h1>🎓 Professor Email Assistant</h1>
+                <h1>🎓 ProfMail</h1>
                 <p>AI powered email management for academics</p>
                 <p><small>最終処理: {bot.last_execution.strftime('%Y-%m-%d %H:%M') if bot.last_execution else '未実行'}</small></p>
             </div>
             
             <div class="dashboard">
                 <div class="sidebar">
-                    <h3>📊 概要</h3>
+                    <h3 style="color: #1976d2;">概要</h3>
                     <div class="stats-grid">
                         <a href="/all" class="stat-box clickable">
                             <div class="stat-number">{stats.get('pending_emails', 0)}</div>
-                            <div class="stat-label">📝 未対応</div>
+                            <div class="stat-label">未対応</div>
                         </a>
                         <a href="/completed" class="stat-box clickable">
                             <div class="stat-number">{stats.get('completed_emails', 0)}</div>
-                            <div class="stat-label">✅ 完了済み</div>
+                            <div class="stat-label">完了済み</div>
                         </a>
-                        <div class="stat-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="stat-box" style="background: linear-gradient(135deg, #ffa726 0%, #ffb74d 100%); color: #1565c0;">
                             <div class="stat-number">{stats.get('total_emails', 0)}</div>
-                            <div class="stat-label">📊 総メール数</div>
-                        </div>
-                        <div class="stat-box" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333;">
-                            <div class="stat-number">{stats.get('pending_emails', 0)}</div>
-                            <div class="stat-label">🎯 処理待ち</div>
+                            <div class="stat-label">総メール数</div>
                         </div>
                     </div>
                     
                     <div class="action-buttons">
-                        <button id="process-btn" class="btn btn-success" onclick="processEmails()">📬 今すぐ処理</button>
-                        <p><small>💡 上の数字をクリックで詳細表示</small></p>
+                        <button id="process-btn" class="btn btn-success" onclick="processEmails()">実行</button>
                     </div>
-                    
-                    <h4>⚙️ 設定</h4>
-                    <p><small>⏰ 毎日朝8:00に自動処理</small></p>
-                    <p><small>🤖 AI分析 + 返信草案生成</small></p>
-                    
-                    <h4>🔍 デバッグ</h4>
-                    <p><small><a href="/debug/emails" target="_blank">📧 取得メール確認</a></small></p>
-                    <p><small><a href="/debug/db" target="_blank">🗄️ DB構造確認</a></small></p>
+
+                    <h4 style="color: #1976d2;">優先度別分布</h4>
+                    <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                        <a href="/priority/high" style="text-decoration: none; color: inherit;">
+                            <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #ffebee; border: 2px solid #e74c3c;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                <div style="font-size: 2em; color: #e74c3c; font-weight: bold;">{stats.get('priority_stats', {}).get('高', 0)}</div>
+                                <div style="color: #e74c3c; font-weight: bold;">高</div>
+                            </div>
+                        </a>
+                        <a href="/priority/medium" style="text-decoration: none; color: inherit;">
+                            <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #fff8e1; border: 2px solid #ffa726;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                <div style="font-size: 2em; color: #ffa726; font-weight: bold;">{stats.get('priority_stats', {}).get('中', 0)}</div>
+                                <div style="color: #ffa726; font-weight: bold;">中</div>
+                            </div>
+                        </a>
+                        <a href="/priority/low" style="text-decoration: none; color: inherit;">
+                            <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #e8f5e8; border: 2px solid #66bb6a;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                <div style="font-size: 2em; color: #66bb6a; font-weight: bold;">{stats.get('priority_stats', {}).get('低', 0)}</div>
+                                <div style="color: #66bb6a; font-weight: bold;">低</div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="main-content">
-                    <h3>📁 カテゴリ別メール</h3>
+                    <h3 style="color: #1976d2;">📁 カテゴリ別メール</h3>
                     <ul class="category-list">
                         {_generate_category_list(categories, stats)}
                     </ul>
                     
-                    <h4>🔥 優先度別分布（クリックでフィルター）</h4>
-                    <div style="display: flex; justify-content: space-around; margin: 20px 0;">
-                        <a href="/priority/high" style="text-decoration: none; color: inherit;">
-                            <div style="text-align: center; padding: 10px; border-radius: 8px; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                <div style="font-size: 2em; color: #e74c3c; font-weight: bold;">{stats.get('priority_stats', {}).get('高', 0)}</div>
-                                <div>🔥 高優先度</div>
-                            </div>
-                        </a>
-                        <a href="/priority/medium" style="text-decoration: none; color: inherit;">
-                            <div style="text-align: center; padding: 10px; border-radius: 8px; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                <div style="font-size: 2em; color: #f39c12; font-weight: bold;">{stats.get('priority_stats', {}).get('中', 0)}</div>
-                                <div>⚡ 中優先度</div>
-                            </div>
-                        </a>
-                        <a href="/priority/low" style="text-decoration: none; color: inherit;">
-                            <div style="text-align: center; padding: 10px; border-radius: 8px; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                <div style="font-size: 2em; color: #95a5a6; font-weight: bold;">{stats.get('priority_stats', {}).get('低', 0)}</div>
-                                <div>📝 低優先度</div>
-                            </div>
-                        </a>
-                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -963,43 +1037,206 @@ async def priority_view(priority_level: str):
     <!DOCTYPE html>
     <html>
     <head>
-        <title>{priority_jp}優先度メール - Professor Email Assistant</title>
+        <title>{priority_jp}優先度メール - ProfMail</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }}
+            body {{ 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
+            }}
             .container {{ max-width: 1000px; margin: 0 auto; }}
-            .header {{ background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-            .back-btn {{ background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 20px; text-decoration: none; margin-right: 10px; }}
-            .priority-badge {{ padding: 8px 16px; border-radius: 20px; color: white; font-weight: bold; }}
+            .header {{ 
+                background: white; 
+                padding: 20px; 
+                border-radius: 10px; 
+                margin-bottom: 20px; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
+                border: 2px solid #ffd54f;
+            }}
+            .back-btn {{ 
+                background: #1976d2; 
+                color: white; 
+                padding: 8px 16px; 
+                border: none; 
+                border-radius: 20px; 
+                text-decoration: none; 
+                margin-right: 10px;
+                border: 2px solid #ffd54f;
+            }}
+            .priority-badge {{ 
+                padding: 8px 16px; 
+                border-radius: 20px; 
+                color: white; 
+                font-weight: bold; 
+            }}
             .priority-high .priority-badge {{ background: #e74c3c; }}
-            .priority-medium .priority-badge {{ background: #f39c12; }}
-            .priority-low .priority-badge {{ background: #95a5a6; }}
-            .email-card {{ background: white; margin: 15px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }}
-            .email-header {{ padding: 20px; border-left: 4px solid #667eea; }}
-            .email-subject {{ font-size: 1.2em; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }}
-            .email-meta {{ color: #7f8c8d; font-size: 0.9em; margin-bottom: 15px; }}
-            .email-summary {{ color: #34495e; margin-bottom: 15px; padding: 10px; background: #ecf0f1; border-radius: 5px; }}
-            .email-actions {{ padding: 0 20px 20px 20px; }}
-            .btn {{ padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; }}
-            .btn-primary {{ background: #3498db; color: white; }}
-            .btn-success {{ background: #2ecc71; color: white; }}
+            .priority-medium .priority-badge {{ background: #ffa726; }}
+            .priority-low .priority-badge {{ background: #66bb6a; }}
+            .email-card {{ 
+                background: white; 
+                margin: 15px 0; 
+                border-radius: 10px; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1); 
+                overflow: hidden;
+                border: 1px solid #e3f2fd;
+            }}
+            .email-header {{ 
+                padding: 20px; 
+                border-left: 4px solid #1976d2; 
+            }}
+            .email-subject {{ 
+                font-size: 1.2em; 
+                font-weight: bold; 
+                margin-bottom: 10px; 
+                color: #1565c0; 
+            }}
+            .email-meta {{ 
+                color: #7f8c8d; 
+                font-size: 0.9em; 
+                margin-bottom: 15px; 
+            }}
+            .email-summary {{ 
+                color: #34495e; 
+                margin-bottom: 15px; 
+                padding: 10px; 
+                background: #e3f2fd; 
+                border-radius: 5px; 
+            }}
+            .email-actions {{ 
+                padding: 0 20px 20px 20px; 
+            }}
+            .btn {{ 
+                padding: 8px 16px; 
+                margin: 5px; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                text-decoration: none; 
+                display: inline-block; 
+            }}
+            .btn-primary {{ background: #1976d2; color: white; }}
+            .btn-success {{ background: #ffa726; color: white; }}
             .btn-danger {{ background: #e74c3c; color: white; }}
             .priority-high {{ border-left-color: #e74c3c !important; }}
-            .priority-medium {{ border-left-color: #f39c12 !important; }}
-            .priority-low {{ border-left-color: #95a5a6 !important; }}
-            .urgency-score {{ background: #667eea; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; }}
-            .reply-preview {{ background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 3px solid #17a2b8; }}
-            .reply-preview h5 {{ margin: 0 0 10px 0; color: #17a2b8; }}
+            .priority-medium {{ border-left-color: #ffa726 !important; }}
+            .priority-low {{ border-left-color: #66bb6a !important; }}
+            .urgency-score {{ 
+                background: #ffa726; 
+                color: white; 
+                padding: 4px 8px; 
+                border-radius: 12px; 
+                font-size: 0.8em; 
+            }}
+            .reply-preview {{ 
+                background: #fff8e1; 
+                padding: 15px; 
+                margin: 10px 0; 
+                border-radius: 5px; 
+                border-left: 3px solid #ffa726; 
+            }}
+            .reply-preview h5 {{ 
+                margin: 0 0 10px 0; 
+                color: #ffa726; 
+            }}
             .reply-tabs {{ margin-bottom: 10px; }}
-            .tab-btn {{ padding: 5px 12px; border: 1px solid #17a2b8; background: white; cursor: pointer; margin-right: 5px; border-radius: 3px; }}
-            .tab-btn.active {{ background: #17a2b8; color: white; }}
+            .tab-btn {{ 
+                padding: 5px 12px; 
+                border: 1px solid #ffa726; 
+                background: white; 
+                cursor: pointer; 
+                margin-right: 5px; 
+                border-radius: 3px; 
+            }}
+            .tab-btn.active {{ 
+                background: #ffa726; 
+                color: white; 
+            }}
             .reply-content {{ display: none; }}
             .reply-content.active {{ display: block; }}
-            .reply-text {{ font-style: italic; color: #495057; line-height: 1.6; }}
-            .markdown-text {{ width: 100%; height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 10px; font-family: monospace; resize: vertical; }}
-            .copy-btn {{ background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-top: 5px; }}
-            .copy-btn:hover {{ background: #218838; }}
+            .reply-text {{ 
+                font-style: italic; 
+                color: #495057; 
+                line-height: 1.6; 
+            }}
+            .markdown-text {{ 
+                width: 100%; 
+                height: 200px; 
+                border: 1px solid #ddd; 
+                border-radius: 5px; 
+                padding: 10px; 
+                font-family: monospace; 
+                resize: vertical; 
+            }}
+            .copy-btn, .copy-btn-quick, .copy-btn-preview, .select-btn {{ 
+                background: #ffa726; 
+                color: white; 
+                border: none; 
+                padding: 8px 12px; 
+                border-radius: 20px; 
+                cursor: pointer; 
+                margin: 3px; 
+                font-size: 0.85em;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                border: 2px solid #fff;
+            }}
+            .copy-btn:hover, .copy-btn-quick:hover, .copy-btn-preview:hover, .select-btn:hover {{ 
+                background: #ff9800; 
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(255, 167, 38, 0.4);
+            }}
+            .copy-btn-quick {{ 
+                background: #1976d2; 
+                font-size: 0.9em;
+                padding: 6px 15px;
+            }}
+            .copy-btn-quick:hover {{ 
+                background: #1565c0; 
+            }}
+            .copy-actions {{ 
+                margin-top: 10px; 
+                text-align: center; 
+                padding: 10px;
+                background: #f8f9fa;
+                border-radius: 8px;
+            }}
+            .copy-hint {{ 
+                display: block; 
+                margin-top: 8px; 
+                color: #666; 
+                font-style: italic; 
+            }}
+            .markdown-text {{ 
+                width: 100%; 
+                height: 200px; 
+                border: 2px solid #e3f2fd; 
+                border-radius: 8px; 
+                padding: 15px; 
+                font-family: 'Courier New', monospace; 
+                resize: vertical; 
+                font-size: 14px;
+                line-height: 1.5;
+            }}
+            .markdown-text:focus {{ 
+                border-color: #1976d2; 
+                outline: none;
+                box-shadow: 0 0 5px rgba(25, 118, 210, 0.3);
+            }}
+            .copy-success-alert {{
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4caf50;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                font-weight: bold;
+            }}
         </style>
         <script>
             function showReplyTab(emailId, tabType) {{
@@ -1013,21 +1250,90 @@ async def priority_view(priority_level: str):
             }}
             
             async function copyToClipboard(emailId) {{
-                const textarea = document.querySelector(`#reply-markdown-${{emailId}} .markdown-text`);
+                // クイックコピー：マークダウンテキストをコピー
+                const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
+                await copyTextToClipboard(textarea.value, 'メール草案をコピーしました！📋');
+            }}
+            
+            async function copyFromTextarea(emailId) {{
+                // テキストエリアからコピー
+                const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
+                await copyTextToClipboard(textarea.value, 'マークダウンテキストをコピーしました！📝');
+            }}
+            
+            async function copyReplyText(emailId) {{
+                // プレビューテキストからコピー（HTMLタグを除去）
+                const replyDiv = document.querySelector(`#reply-preview-${{emailId}} .reply-text`);
+                const plainText = replyDiv.innerText || replyDiv.textContent;
+                await copyTextToClipboard(plainText, 'プレビュー内容をコピーしました！👁️');
+            }}
+            
+            async function copyTextToClipboard(text, successMessage) {{
                 try {{
-                    await navigator.clipboard.writeText(textarea.value);
-                    const btn = event.target;
-                    const originalText = btn.textContent;
-                    btn.textContent = '✅ コピー済み';
-                    setTimeout(() => {{
-                        btn.textContent = originalText;
-                    }}, 2000);
+                    await navigator.clipboard.writeText(text);
+                    showCopySuccess(successMessage);
                 }} catch (err) {{
-                    // Fallback for older browsers
-                    textarea.select();
+                    // フォールバック：古いブラウザ対応
+                    const tempTextarea = document.createElement('textarea');
+                    tempTextarea.value = text;
+                    document.body.appendChild(tempTextarea);
+                    tempTextarea.select();
                     document.execCommand('copy');
-                    alert('返信草案をコピーしました');
+                    document.body.removeChild(tempTextarea);
+                    showCopySuccess(successMessage);
                 }}
+            }}
+            
+            function selectAllText(emailId) {{
+                const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
+                textarea.select();
+                textarea.setSelectionRange(0, 99999); // モバイル対応
+                showCopySuccess('テキストを全選択しました！🔤 Ctrl+C でコピーできます');
+            }}
+            
+            function showCopySuccess(message) {{
+                // 成功メッセージを表示
+                const existingAlert = document.querySelector('.copy-success-alert');
+                if (existingAlert) {{
+                    existingAlert.remove();
+                }}
+                
+                const alert = document.createElement('div');
+                alert.className = 'copy-success-alert';
+                alert.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4caf50;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 1000;
+                    font-weight: bold;
+                    animation: slideIn 0.3s ease;
+                `;
+                alert.textContent = message;
+                
+                // アニメーション用CSS
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes slideIn {{
+                        from {{ transform: translateX(100%); opacity: 0; }}
+                        to {{ transform: translateX(0); opacity: 1; }}
+                    }}
+                `;
+                document.head.appendChild(style);
+                
+                document.body.appendChild(alert);
+                
+                // 3秒後に自動で消去
+                setTimeout(() => {{
+                    if (alert.parentNode) {{
+                        alert.style.animation = 'slideIn 0.3s ease reverse';
+                        setTimeout(() => alert.remove(), 300);
+                    }}
+                }}, 3000);
             }}
             
             async function markCompleted(emailId) {{
@@ -1067,7 +1373,7 @@ async def priority_view(priority_level: str):
         <div class="container priority-{priority_level}">
             <div class="header">
                 <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2>
+                <h2 style="color: #1565c0;">
                     <span class="priority-badge">{priority_jp}優先度</span>
                     メール ({len(emails)}件)
                 </h2>
@@ -1089,32 +1395,90 @@ async def completed_emails():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>完了済みメール - Professor Email Assistant</title>
+        <title>完了済みメール - ProfMail</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }}
+            body {{ 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
+            }}
             .container {{ max-width: 1200px; margin: 0 auto; }}
-            .header {{ background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-            .back-btn {{ background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 20px; text-decoration: none; margin-right: 10px; }}
-            .email-table {{ background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            .header {{ 
+                background: white; 
+                padding: 20px; 
+                border-radius: 10px; 
+                margin-bottom: 20px; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
+                border: 2px solid #ffd54f;
+            }}
+            .back-btn {{ 
+                background: #1976d2; 
+                color: white; 
+                padding: 8px 16px; 
+                border: none; 
+                border-radius: 20px; 
+                text-decoration: none; 
+                margin-right: 10px;
+                border: 2px solid #ffd54f;
+            }}
+            .email-table {{ 
+                background: white; 
+                border-radius: 10px; 
+                overflow: hidden; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
+                border: 1px solid #e3f2fd;
+            }}
             .email-table table {{ width: 100%; border-collapse: collapse; }}
-            .email-table th {{ background: #2ecc71; color: white; padding: 15px; text-align: left; }}
-            .email-table td {{ padding: 15px; border-bottom: 1px solid #ecf0f1; }}
+            .email-table th {{ 
+                background: #66bb6a; 
+                color: white; 
+                padding: 15px; 
+                text-align: left; 
+            }}
+            .email-table td {{ 
+                padding: 15px; 
+                border-bottom: 1px solid #e3f2fd; 
+            }}
             .email-table tr:hover {{ background: #f8f9fa; }}
-            .completed-item {{ background: #d5e8d4; opacity: 0.8; }}
-            .btn {{ padding: 5px 10px; margin: 2px; border: none; border-radius: 3px; cursor: pointer; text-decoration: none; font-size: 0.8em; }}
-            .btn-primary {{ background: #3498db; color: white; }}
-            .btn-success {{ background: #2ecc71; color: white; }}
-            .category-badge {{ background: #2ecc71; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.7em; }}
-            .completed-badge {{ background: #27ae60; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7em; }}
+            .completed-item {{ 
+                background: #e8f5e8; 
+                opacity: 0.8; 
+            }}
+            .btn {{ 
+                padding: 5px 10px; 
+                margin: 2px; 
+                border: none; 
+                border-radius: 3px; 
+                cursor: pointer; 
+                text-decoration: none; 
+                font-size: 0.8em; 
+            }}
+            .btn-primary {{ background: #1976d2; color: white; }}
+            .btn-success {{ background: #66bb6a; color: white; }}
+            .category-badge {{ 
+                background: #66bb6a; 
+                color: white; 
+                padding: 3px 8px; 
+                border-radius: 10px; 
+                font-size: 0.7em; 
+            }}
+            .completed-badge {{ 
+                background: #4caf50; 
+                color: white; 
+                padding: 2px 6px; 
+                border-radius: 8px; 
+                font-size: 0.7em; 
+            }}
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2>✅ 完了済みメール ({len(emails)}件)</h2>
+                <h2 style="color: #1565c0;">✅ 完了済みメール ({len(emails)}件)</h2>
             </div>
             
             <div class="email-table">
@@ -1149,45 +1513,159 @@ async def category_view(category_name: str):
     <!DOCTYPE html>
     <html>
     <head>
-        <title>{category_name} - Professor Email Assistant</title>
+        <title>{category_name} - ProfMail</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }}
+            body {{ 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
+            }}
             .container {{ max-width: 1000px; margin: 0 auto; }}
-            .header {{ background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-            .back-btn {{ background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 20px; text-decoration: none; margin-right: 10px; }}
+            .header {{ 
+                background: white; 
+                padding: 20px; 
+                border-radius: 10px; 
+                margin-bottom: 20px; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
+                border: 2px solid #ffd54f;
+            }}
+            .back-btn {{ 
+                background: #1976d2; 
+                color: white; 
+                padding: 8px 16px; 
+                border: none; 
+                border-radius: 20px; 
+                text-decoration: none; 
+                margin-right: 10px;
+                border: 2px solid #ffd54f;
+            }}
             .tabs {{ display: flex; margin-bottom: 20px; }}
-            .tab {{ padding: 12px 24px; cursor: pointer; border: 1px solid #ddd; background: #f8f9fa; margin-right: 5px; border-radius: 5px 5px 0 0; }}
-            .tab.active {{ background: #667eea; color: white; }}
+            .tab {{ 
+                padding: 12px 24px; 
+                cursor: pointer; 
+                border: 1px solid #ddd; 
+                background: #f8f9fa; 
+                margin-right: 5px; 
+                border-radius: 5px 5px 0 0; 
+            }}
+            .tab.active {{ 
+                background: #1976d2; 
+                color: white; 
+            }}
             .tab-content {{ display: none; }}
             .tab-content.active {{ display: block; }}
-            .email-card {{ background: white; margin: 15px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }}
-            .email-header {{ padding: 20px; border-left: 4px solid #667eea; }}
-            .email-subject {{ font-size: 1.2em; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }}
-            .email-meta {{ color: #7f8c8d; font-size: 0.9em; margin-bottom: 15px; }}
-            .email-summary {{ color: #34495e; margin-bottom: 15px; padding: 10px; background: #ecf0f1; border-radius: 5px; }}
-            .email-actions {{ padding: 0 20px 20px 20px; }}
-            .btn {{ padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; }}
-            .btn-primary {{ background: #3498db; color: white; }}
-            .btn-success {{ background: #2ecc71; color: white; }}
+            .email-card {{ 
+                background: white; 
+                margin: 15px 0; 
+                border-radius: 10px; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1); 
+                overflow: hidden;
+                border: 1px solid #e3f2fd;
+            }}
+            .email-header {{ 
+                padding: 20px; 
+                border-left: 4px solid #1976d2; 
+            }}
+            .email-subject {{ 
+                font-size: 1.2em; 
+                font-weight: bold; 
+                margin-bottom: 10px; 
+                color: #1565c0; 
+            }}
+            .email-meta {{ 
+                color: #7f8c8d; 
+                font-size: 0.9em; 
+                margin-bottom: 15px; 
+            }}
+            .email-summary {{ 
+                color: #34495e; 
+                margin-bottom: 15px; 
+                padding: 10px; 
+                background: #e3f2fd; 
+                border-radius: 5px; 
+            }}
+            .email-actions {{ 
+                padding: 0 20px 20px 20px; 
+            }}
+            .btn {{ 
+                padding: 8px 16px; 
+                margin: 5px; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                text-decoration: none; 
+                display: inline-block; 
+            }}
+            .btn-primary {{ background: #1976d2; color: white; }}
+            .btn-success {{ background: #ffa726; color: white; }}
             .btn-danger {{ background: #e74c3c; color: white; }}
             .priority-high {{ border-left-color: #e74c3c !important; }}
-            .priority-medium {{ border-left-color: #f39c12 !important; }}
-            .priority-low {{ border-left-color: #95a5a6 !important; }}
-            .urgency-score {{ background: #667eea; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; }}
-            .reply-preview {{ background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 3px solid #17a2b8; }}
-            .reply-preview h5 {{ margin: 0 0 10px 0; color: #17a2b8; }}
+            .priority-medium {{ border-left-color: #ffa726 !important; }}
+            .priority-low {{ border-left-color: #66bb6a !important; }}
+            .urgency-score {{ 
+                background: #ffa726; 
+                color: white; 
+                padding: 4px 8px; 
+                border-radius: 12px; 
+                font-size: 0.8em; 
+            }}
+            .reply-preview {{ 
+                background: #fff8e1; 
+                padding: 15px; 
+                margin: 10px 0; 
+                border-radius: 5px; 
+                border-left: 3px solid #ffa726; 
+            }}
+            .reply-preview h5 {{ 
+                margin: 0 0 10px 0; 
+                color: #ffa726; 
+            }}
             .reply-tabs {{ margin-bottom: 10px; }}
-            .tab-btn {{ padding: 5px 12px; border: 1px solid #17a2b8; background: white; cursor: pointer; margin-right: 5px; border-radius: 3px; }}
-            .tab-btn.active {{ background: #17a2b8; color: white; }}
+            .tab-btn {{ 
+                padding: 5px 12px; 
+                border: 1px solid #ffa726; 
+                background: white; 
+                cursor: pointer; 
+                margin-right: 5px; 
+                border-radius: 3px; 
+            }}
+            .tab-btn.active {{ 
+                background: #ffa726; 
+                color: white; 
+            }}
             .reply-content {{ display: none; }}
             .reply-content.active {{ display: block; }}
-            .reply-text {{ font-style: italic; color: #495057; line-height: 1.6; }}
-            .markdown-text {{ width: 100%; height: 200px; border: 1px solid #ddd; border-radius: 5px; padding: 10px; font-family: monospace; resize: vertical; }}
-            .copy-btn {{ background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-top: 5px; }}
-            .copy-btn:hover {{ background: #218838; }}
-            .completed-item {{ opacity: 0.7; background: #d5e8d4; }}
+            .reply-text {{ 
+                font-style: italic; 
+                color: #495057; 
+                line-height: 1.6; 
+            }}
+            .markdown-text {{ 
+                width: 100%; 
+                height: 200px; 
+                border: 1px solid #ddd; 
+                border-radius: 5px; 
+                padding: 10px; 
+                font-family: monospace; 
+                resize: vertical; 
+            }}
+            .copy-btn {{ 
+                background: #66bb6a; 
+                color: white; 
+                border: none; 
+                padding: 5px 10px; 
+                border-radius: 3px; 
+                cursor: pointer; 
+                margin-top: 5px; 
+            }}
+            .copy-btn:hover {{ background: #4caf50; }}
+            .completed-item {{ 
+                opacity: 0.7; 
+                background: #e8f5e8; 
+            }}
         </style>
         <script>
             function showTab(tabName) {{
@@ -1262,12 +1740,12 @@ async def category_view(category_name: str):
         <div class="container">
             <div class="header">
                 <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2>{category_name}</h2>
+                <h2 style="color: #1565c0;">{category_name}</h2>
             </div>
             
             <div class="tabs">
-                <div class="tab active" onclick="showTab('pending-tab')">📝 未対応 ({len(pending_emails)})</div>
-                <div class="tab" onclick="showTab('completed-tab')">✅ 完了済み ({len(completed_emails)})</div>
+                <div class="tab active" onclick="showTab('pending-tab')">未対応 ({len(pending_emails)})</div>
+                <div class="tab" onclick="showTab('completed-tab')">完了済み ({len(completed_emails)})</div>
             </div>
             
             <div id="pending-tab" class="tab-content active">
@@ -1335,34 +1813,83 @@ async def all_emails():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>すべてのメール - Professor Email Assistant</title>
+        <title>すべてのメール - ProfMail</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }}
+            body {{ 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                margin: 0; 
+                padding: 20px; 
+                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
+            }}
             .container {{ max-width: 1200px; margin: 0 auto; }}
-            .header {{ background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-            .back-btn {{ background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 20px; text-decoration: none; margin-right: 10px; }}
-            .email-table {{ background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            .header {{ 
+                background: white; 
+                padding: 20px; 
+                border-radius: 10px; 
+                margin-bottom: 20px; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
+                border: 2px solid #ffd54f;
+            }}
+            .back-btn {{ 
+                background: #1976d2; 
+                color: white; 
+                padding: 8px 16px; 
+                border: none; 
+                border-radius: 20px; 
+                text-decoration: none; 
+                margin-right: 10px;
+                border: 2px solid #ffd54f;
+            }}
+            .email-table {{ 
+                background: white; 
+                border-radius: 10px; 
+                overflow: hidden; 
+                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
+                border: 1px solid #e3f2fd;
+            }}
             .email-table table {{ width: 100%; border-collapse: collapse; }}
-            .email-table th {{ background: #667eea; color: white; padding: 15px; text-align: left; }}
-            .email-table td {{ padding: 15px; border-bottom: 1px solid #ecf0f1; }}
+            .email-table th {{ 
+                background: #1976d2; 
+                color: white; 
+                padding: 15px; 
+                text-align: left; 
+            }}
+            .email-table td {{ 
+                padding: 15px; 
+                border-bottom: 1px solid #e3f2fd; 
+            }}
             .email-table tr:hover {{ background: #f8f9fa; }}
-            .priority-high {{ background: #ffeaa7; }}
-            .priority-medium {{ background: #ddd; }}
-            .priority-low {{ background: #b2dfdb; }}
-            .btn {{ padding: 5px 10px; margin: 2px; border: none; border-radius: 3px; cursor: pointer; text-decoration: none; font-size: 0.8em; }}
-            .btn-primary {{ background: #3498db; color: white; }}
-            .btn-success {{ background: #2ecc71; color: white; }}
+            .priority-high {{ background: #ffebee; }}
+            .priority-medium {{ background: #fff8e1; }}
+            .priority-low {{ background: #e8f5e8; }}
+            .btn {{ 
+                padding: 5px 10px; 
+                margin: 2px; 
+                border: none; 
+                border-radius: 3px; 
+                cursor: pointer; 
+                text-decoration: none; 
+                font-size: 0.8em; 
+            }}
+            .btn-primary {{ background: #1976d2; color: white; }}
+            .btn-success {{ background: #ffa726; color: white; }}
             .btn-danger {{ background: #e74c3c; color: white; }}
-            .category-badge {{ background: #667eea; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.7em; }}
+            .category-badge {{ 
+                background: #1976d2; 
+                color: white; 
+                padding: 3px 8px; 
+                border-radius: 10px; 
+                font-size: 0.7em; 
+            }}
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2>📋 すべてのメール ({len(emails)}件)</h2>
+                <h2 style="color: #1565c0;">📋 すべてのメール ({len(emails)}件)</h2>
             </div>
             
             <div class="email-table">
