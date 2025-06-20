@@ -1,124 +1,158 @@
-# ProfMail（大学教授向けメール管理AI）
+# ProfMail 📧🎓
 
-## 概要
+大学教授向けAI powered メール管理・返信支援システム
 
-ProfMailは、大学教授や研究者向けに設計されたAIメール管理・返信支援システムです。Gmailから自動でメールを取得し、AI（OpenAI API）でカテゴリ分類・優先度付け・緊急度分析・返信草案生成を行い、Webダッシュボードで効率的に管理できます。
+## 🚀 機能
 
-- **Gmail API**でメール自動取得
-- **OpenAI API**でAIによるメール分析・返信草案生成
-- **FastAPI**によるWebダッシュボード
-- SQLiteによるローカルDB管理
-- APSchedulerによる毎朝自動処理
+- **Gmail API統合**: 自動メール取得
+- **AI分析**: OpenAI GPT-4o-miniによるメール分類・優先度判定
+- **返信草案生成**: マークダウン形式での返信草案自動作成
+- **Web UI**: 直感的なダッシュボード
+- **自動スケジューラー**: 毎日8時に自動処理
 
----
-
-## ディレクトリ構成
+## 📁 プロジェクト構造
 
 ```
-ProfMail/
-  ├── main.py                # メインアプリケーション（FastAPI）
-  ├── requirements.txt       # 必要なPythonパッケージ
-  ├── README.md              # このファイル
-  ├── professor_emails.db    # メール情報DB（自動生成）
-  ├── token.pickle           # Gmail認証トークン（自動生成）
-  └── .gitignore             # 一時ファイル除外設定
+profmail/
+├── main.py                 # アプリケーションエントリーポイント
+├── config.py              # 設定管理
+├── requirements.txt        # 依存関係
+├── models/                 # データモデル
+│   ├── __init__.py
+│   └── database.py         # データベース操作
+├── services/               # ビジネスロジック
+│   ├── __init__.py
+│   ├── gmail_service.py    # Gmail API
+│   ├── openai_service.py   # OpenAI API
+│   └── email_processor.py  # メール処理
+├── api/                    # Web API
+│   ├── __init__.py
+│   └── routes.py           # FastAPI ルート
+├── templates/              # HTML生成
+│   ├── __init__.py
+│   └── html_generator.py   # HTML テンプレート
+└── utils/                  # ユーティリティ
+    ├── __init__.py
+    └── helpers.py          # ヘルパー関数
 ```
 
----
+## 🔧 セットアップ
 
-## セットアップ手順
-
-1. **リポジトリのクローン**
-
-```bash
-git clone <このリポジトリのURL>
-cd ProfMail
-```
-
-2. **Python仮想環境の作成・有効化（推奨）**
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-3. **依存パッケージのインストール**
+### 1. 依存関係インストール
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Google CloudでGmail APIの認証情報（credentials.json）を取得し、ProfMailディレクトリ直下に配置**
-   - [Google Cloud Console](https://console.cloud.google.com/) でOAuth2クライアントIDを作成し、`credentials.json`をダウンロードしてください。
+### 2. 環境変数設定
 
-5. **環境変数ファイル（.env）を作成**
+`.env` ファイルを作成:
 
+```env
+OPENAI_API_KEY=your_openai_api_key_here
 ```
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
 
-6. **初回起動時にGmail認証を行う**
+### 3. Gmail API認証
+
+- `credentials.json` を プロジェクトルートに配置
+- 初回実行時にブラウザで認証
+
+### 4. アプリケーション起動
 
 ```bash
 python main.py
 ```
-- ブラウザが開き、Googleアカウント認証画面が表示されます。
-- 認証後、`token.pickle`が自動生成されます。
 
-7. **FastAPIサーバーの起動**
+## 📱 使用方法
 
-```bash
-python main.py
+1. **ブラウザアクセス**: http://localhost:8000
+2. **メール処理実行**: 「実行」ボタンクリック
+3. **メール管理**: カテゴリ別・優先度別でメール確認
+4. **返信草案**: AI生成の返信草案をコピー&編集
+
+## 🎯 メールカテゴリ
+
+- **学生質問** 📚: 授業・研究関連の質問
+- **研究室運営** 🔬: 研究室メンバーとの連絡
+- **共同研究** 🤝: 他研究者との連絡
+- **論文査読** 📄: 査読依頼・審査
+- **会議調整** 📅: 日程調整
+- **事務連絡** 📋: 大学事務手続き
+- **学会イベント** 📢: 学会・セミナー案内
+
+## 🎚️ 優先度システム
+
+- **高**: 緊急対応必要（学生困りごと等）
+- **中**: 通常対応（一般質問等）
+- **低**: 情報共有・案内
+
+## 🔄 自動処理
+
+- **実行時間**: 毎日 8:00 AM
+- **対象期間**: 直近3日間のメール
+- **処理内容**: 分類・優先度判定・返信草案生成
+
+## 🛠️ 開発
+
+### アーキテクチャ
+
+- **MVC パターン**: 関心の分離
+- **依存性注入**: テスタブルな設計
+- **モジュール分割**: 保守性向上
+
+### 主要コンポーネント
+
+- **EmailProcessor**: メイン処理ロジック
+- **GmailService**: Gmail API 操作
+- **OpenAIService**: AI分析
+- **Database**: データ永続化
+
+### カスタマイズ
+
+#### 新しいカテゴリ追加
+
+`config.py` の `EMAIL_CATEGORIES` を編集:
+
+```python
+EMAIL_CATEGORIES = {
+    "新カテゴリ": "🆕",
+    # ...
+}
 ```
-- http://localhost:8000 でWebダッシュボードにアクセスできます。
+
+#### スケジュール変更
+
+`config.py` の `SCHEDULER_HOUR`, `SCHEDULER_MINUTE` を編集
+
+## 📊 API エンドポイント
+
+- `GET /`: ダッシュボード
+- `GET /priority/{level}`: 優先度別表示
+- `GET /category/{name}`: カテゴリ別表示
+- `POST /process`: メール処理実行
+- `POST /emails/{id}/complete`: 完了マーク
+- `DELETE /emails/{id}/delete`: メール削除
+
+## 🐛 デバッグ
+
+- `GET /debug/emails`: メール取得テスト
+- `GET /debug/db`: データベース確認
+- `GET /health`: ヘルスチェック
+
+## ⚡ パフォーマンス
+
+- **データベース**: SQLite（軽量・高速）
+- **バックグラウンド処理**: APScheduler
+- **レスポンシブUI**: モダンCSS Grid
+
+## 🔒 セキュリティ
+
+- **OAuth2**: Gmail認証
+- **環境変数**: APIキー管理
+- **入力検証**: SQLインジェクション対策
 
 ---
 
-## 主な機能
-
-- Gmailから直近のメールを自動取得
-- AIによるカテゴリ分類（学生質問/研究室運営/共同研究/論文査読/会議調整/事務連絡/学会イベント/不要メール）
-- 優先度（高/中/低）・緊急度（1-10点）自動判定
-- 返信草案（マークダウン形式）自動生成
-- Webダッシュボードでカテゴリ・優先度・完了済みメールを一覧管理
-- メールの「完了」「削除」操作
-- 毎朝8時に自動で新着メールを処理
-
----
-
-## 必要な環境変数（.env例）
-
-```
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-- Gmail API認証には`credentials.json`が必要です（.gitignoreで除外済み）。
-
----
-
-## APIエンドポイント例
-
-http://localhost:8000/docs#/
-
-- `/` : ダッシュボード（HTML）
-- `/process` : メール自動処理（POST）
-- `/priority/{high|medium|low}` : 優先度別メール一覧
-- `/category/{カテゴリ名}` : カテゴリ別メール一覧
-- `/completed` : 完了済みメール一覧
-- `/emails/{email_id}/complete` : メールを完了にする（POST）
-- `/emails/{email_id}/delete` : メールを削除する（DELETE）
-- `/all` : すべての未対応メール一覧
-- `/debug/emails` : 直近取得メールのJSON
-- `/debug/db` : DB構造確認
-- `/health` : ヘルスチェック
-
----
-
-## 注意事項
-
-- 本システムは個人のGmailアカウントにアクセスします。Google CloudのAPI利用制限やセキュリティポリシーにご注意ください。
-- OpenAI APIの利用にはAPIキーが必要です（有料プラン推奨）。
-- `professor_emails.db`や`token.pickle`は自動生成されます。
-- `credentials.json`と`.env`は必ず`.gitignore`に含めてください。
-
----
+**Version**: 3.0.0  
+**Author**: Professor Email Assistant Team  
+**License**: MIT
