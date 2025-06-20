@@ -68,50 +68,118 @@ class ProfessorEmailDatabase:
         conn.close()
         print("✅ 教授向けデータベース初期化完了")
     
-    def save_email(self, email_data: Dict[str, Any]) -> bool:
-        """メール情報を保存"""
+    def save_email(self, email_data: Dict[str, Any]) -> Dict[str, Any]:
+        """メール情報を保存（既存メールのステータス保持）"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            # 複数のGmailリンク形式を試す
             email_id = email_data['id']
+            email_subject = email_data['subject'][:50] + "..." if len(email_data['subject']) > 50 else email_data['subject']
+            
+            # デバッグ: メールID確認
+            print(f"🔍 処理中メールID: {email_id}")
+            print(f"📧 件名: {email_subject}")
+            
+            # 既存メールの状態をチェック
+            cursor.execute('SELECT status, completed_at FROM emails WHERE id = ?', (email_id,))
+            existing_email = cursor.fetchone()
+            
+            # 複数のGmailリンク形式を試す
             gmail_links = [
                 f"https://mail.google.com/mail/u/0/#all/{email_id}",  # 全メールから検索
                 f"https://mail.google.com/mail/u/0/#inbox/{email_id}",  # 受信トレイ
                 f"https://mail.google.com/mail/u/0/?shva=1#search/rfc822msgid%3A{email_id}"  # RFC822 ID検索
             ]
-            
-            # 最初のリンクを使用（all が最も確実）
             gmail_link = gmail_links[0]
             
-            cursor.execute('''
-                INSERT OR REPLACE INTO emails 
-                (id, subject, sender, sender_email, date, body, category, priority, urgency_score, gmail_link, reply_draft, status, processed_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                email_data['id'],
-                email_data['subject'],
-                email_data['sender'],
-                email_data['sender_email'],
-                email_data['date'],
-                email_data['body'],
-                email_data['category'],
-                email_data['priority'],
-                email_data['urgency_score'],
-                gmail_link,
-                email_data['reply_draft'],
-                'pending',
-                datetime.now()
-            ))
+            result = {"success": False, "action": "none", "status": "unknown"}
+            
+            if existing_email:
+                # 既存メールの場合：ステータスと完了日時を保持
+                existing_status, existing_completed_at = existing_email
+                
+                print(f"🔄 既存メール検出！ 現在のステータス: {existing_status}")
+                if existing_completed_at:
+                    print(f"   完了日時: {existing_completed_at}")
+                
+                cursor.execute('''
+                    UPDATE emails SET 
+                    subject = ?, sender = ?, sender_email = ?, date = ?, body = ?, 
+                    category = ?, priority = ?, urgency_score = ?, gmail_link = ?, 
+                    reply_draft = ?, processed_at = ?
+                    WHERE id = ?
+                ''', (
+                    email_data['subject'],
+                    email_data['sender'],
+                    email_data['sender_email'],
+                    email_data['date'],
+                    email_data['body'],
+                    email_data['category'],
+                    email_data['priority'],
+                    email_data['urgency_score'],
+                    gmail_link,
+                    email_data['reply_draft'],
+                    datetime.now(),
+                    email_id
+                ))
+                
+                rows_affected = cursor.rowcount
+                print(f"   📝 UPDATE実行: {rows_affected}行更新")
+                
+                result = {
+                    "success": True, 
+                    "action": "updated", 
+                    "status": existing_status,
+                    "message": f"既存メール更新（ステータス保持: {existing_status}）",
+                    "rows_affected": rows_affected
+                }
+                print(f"   ✅ {result['message']}")
+            else:
+                # 新しいメールの場合：通常の挿入
+                print(f"🆕 新規メール検出")
+                
+                cursor.execute('''
+                    INSERT INTO emails 
+                    (id, subject, sender, sender_email, date, body, category, priority, urgency_score, gmail_link, reply_draft, status, processed_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    email_id,
+                    email_data['subject'],
+                    email_data['sender'],
+                    email_data['sender_email'],
+                    email_data['date'],
+                    email_data['body'],
+                    email_data['category'],
+                    email_data['priority'],
+                    email_data['urgency_score'],
+                    gmail_link,
+                    email_data['reply_draft'],
+                    'pending',
+                    datetime.now()
+                ))
+                
+                rows_affected = cursor.rowcount
+                print(f"   📝 INSERT実行: {rows_affected}行追加")
+                
+                result = {
+                    "success": True, 
+                    "action": "inserted", 
+                    "status": "pending",
+                    "message": "新規メール追加（pending）",
+                    "rows_affected": rows_affected
+                }
+                print(f"   ✅ {result['message']}")
             
             conn.commit()
             conn.close()
-            return True
+            return result
             
         except Exception as e:
             print(f"❌ メール保存エラー: {e}")
-            return False
+            print(f"   メールID: {email_data.get('id', 'Unknown')}")
+            print(f"   件名: {email_data.get('subject', 'Unknown')[:50]}")
+            return {"success": False, "action": "error", "status": "error", "error": str(e)}
     
     def get_emails_by_priority(self, priority: str, status: str = 'pending', limit: int = 20) -> List[Dict[str, Any]]:
         """優先度別メール取得"""

@@ -34,8 +34,8 @@ APP_DESCRIPTION: str = "大学教授向けメール管理・返信支援シス�
 APP_VERSION: str = "3.1.0"
 
 # スケジューラー設定
-SCHEDULER_HOUR: int = 8  # 朝8時に変更
-SCHEDULER_MINUTE: int = 0
+SCHEDULER_HOUR: int = 8
+SCHEDULER_MINUTE: int = 30
 
 # メール処理設定
 DEFAULT_DAYS_BACK: int = 3

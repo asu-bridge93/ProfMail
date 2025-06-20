@@ -12,7 +12,7 @@ from templates.html_generator import (
     generate_completed_email_rows,
     generate_email_table_rows
 )
-from config import EMAIL_CATEGORIES
+from config import EMAIL_CATEGORIES, SCHEDULER_HOUR, SCHEDULER_MINUTE
 
 
 def create_routes(app: FastAPI, email_processor: EmailProcessor):
@@ -423,6 +423,62 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     }}
                 }}
                 
+                async function showPreservationTest() {{
+                    try {{
+                        const response = await fetch('/debug/email-preservation-test');
+                        const result = await response.json();
+                        
+                        let testMessage = '🧪 メール状態保持テスト結果:\\n\\n';
+                        
+                        // 完了済みメール
+                        testMessage += `✅ 完了済みメール: ${{result.preservation_test.completed_count}}件\\n`;
+                        if (result.completed_emails.length > 0) {{
+                            testMessage += '\\n最近完了したメール（最大5件）:\\n';
+                            result.completed_emails.forEach((email, index) => {{
+                                testMessage += `   ${{index + 1}}. ${{email.subject}}\\n`;
+                                testMessage += `      完了日時: ${{email.completed_at ? email.completed_at.slice(0,16) : 'N/A'}}\\n`;
+                            }});
+                        }}
+                        
+                        // 重複チェック
+                        testMessage += `\\n🔍 重複メール検出: ${{result.preservation_test.has_duplicates ? 'あり' : 'なし'}}\\n`;
+                        if (result.duplicate_emails.length > 0) {{
+                            testMessage += '重複メール一覧:\\n';
+                            result.duplicate_emails.forEach(dup => {{
+                                testMessage += `   ID: ${{dup.id}} (重複数: ${{dup.count}})\\n`;
+                            }});
+                        }}
+                        
+                        // 最近の処理
+                        testMessage += `\\n📧 最近処理されたメール（最大5件）:\\n`;
+                        result.recent_processed.slice(0, 5).forEach((email, index) => {{
+                            const statusEmoji = email.status === 'pending' ? '📋' : '✅';
+                            testMessage += `   ${{index + 1}}. ${{statusEmoji}} ${{email.subject}}\\n`;
+                            testMessage += `      ID: ${{email.id}}\\n`;
+                        }});
+                        
+                        // 問題の診断
+                        testMessage += '\\n🔬 診断結果:\\n';
+                        if (result.preservation_test.has_duplicates) {{
+                            testMessage += '⚠️  重複メールが検出されました。メールIDの一意性に問題がある可能性があります。\\n';
+                        }} else {{
+                            testMessage += '✅ メールIDは一意です。\\n';
+                        }}
+                        
+                        if (result.preservation_test.completed_count > 0) {{
+                            testMessage += '✅ 完了済みメールが存在します。\\n';
+                            testMessage += '   次回の「実行」ボタンクリック時に、これらのメールが未対応に戻らないかテストしてください。\\n';
+                        }} else {{
+                            testMessage += '📝 完了済みメールがありません。\\n';
+                            testMessage += '   テストするには、まずメールを完了マークしてください。\\n';
+                        }}
+                        
+                        alert(testMessage);
+                    }} catch (error) {{
+                        alert('状態保持テストエラー: ' + error.message);
+                    }}
+                }}
+                
                 async function showEmailStatus() {{
                     try {{
                         const response = await fetch('/debug/email-status');
@@ -472,7 +528,7 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                 <div class="header">
                     <h1>🎓 ProfMail</h1>
                     <p>AI powered email management for academics with Slack integration</p>
-                    <p><small>最終処理: {email_processor.last_execution.strftime('%Y-%m-%d %H:%M') if email_processor.last_execution else '未実行'}</small></p>
+                    <p><small>定期実行 {SCHEDULER_HOUR}:{SCHEDULER_MINUTE}</small></p>
                 </div>
                 
                 <div class="dashboard">
@@ -491,12 +547,6 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                         
                         <div class="action-buttons">
                             <button id="process-btn" class="btn btn-success" onclick="processEmails()">実行</button>
-                            <br>
-                            <button id="slack-test-btn" class="btn btn-slack" onclick="testSlackNotification()">📤 Slack テスト</button>
-                            <br>
-                            <button id="slack-debug-btn" class="btn" onclick="showSlackDebug()" style="background: #666; color: white; font-size: 0.9em;">🔍 Slack設定確認</button>
-                            <br>
-                            <button id="email-status-btn" class="btn" onclick="showEmailStatus()" style="background: #8e24aa; color: white; font-size: 0.9em;">📊 メール状態確認</button>
                         </div>
 
                         <h3 style="color: #1976d2;">優先度別</h3>
@@ -620,6 +670,73 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
             return {
                 "message": "Slack設定デバッグ情報",
                 "debug_info": debug_info,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {"error": str(e)}
+    
+    @app.get("/debug/email-preservation-test")
+    async def debug_email_preservation():
+        """デバッグ: メール状態保持のテスト"""
+        try:
+            conn = sqlite3.connect(email_processor.get_database().db_path)
+            cursor = conn.cursor()
+            
+            # 完了済みメールの詳細情報
+            cursor.execute('''
+                SELECT id, subject, status, completed_at, processed_at
+                FROM emails 
+                WHERE status = 'completed'
+                ORDER BY completed_at DESC
+                LIMIT 5
+            ''')
+            completed_emails = []
+            for row in cursor.fetchall():
+                completed_emails.append({
+                    "id": row[0],
+                    "subject": row[1][:50] + "..." if len(row[1]) > 50 else row[1],
+                    "status": row[2],
+                    "completed_at": row[3],
+                    "processed_at": row[4]
+                })
+            
+            # 重複メールの検出
+            cursor.execute('''
+                SELECT id, COUNT(*) as count
+                FROM emails 
+                GROUP BY id
+                HAVING COUNT(*) > 1
+            ''')
+            duplicate_emails = [{"id": row[0], "count": row[1]} for row in cursor.fetchall()]
+            
+            # 最近処理されたメールのID一覧
+            cursor.execute('''
+                SELECT id, subject, status, processed_at
+                FROM emails 
+                ORDER BY processed_at DESC
+                LIMIT 10
+            ''')
+            recent_processed = []
+            for row in cursor.fetchall():
+                recent_processed.append({
+                    "id": row[0],
+                    "subject": row[1][:30] + "..." if len(row[1]) > 30 else row[1],
+                    "status": row[2],
+                    "processed_at": row[3]
+                })
+            
+            conn.close()
+            
+            return {
+                "message": "メール状態保持テスト結果",
+                "completed_emails": completed_emails,
+                "duplicate_emails": duplicate_emails,
+                "recent_processed": recent_processed,
+                "preservation_test": {
+                    "completed_count": len(completed_emails),
+                    "duplicate_count": len(duplicate_emails),
+                    "has_duplicates": len(duplicate_emails) > 0
+                },
                 "timestamp": datetime.now().isoformat()
             }
         except Exception as e:
