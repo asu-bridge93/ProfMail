@@ -13,6 +13,9 @@ google-api-python-client==2.108.0
 # OpenAI API
 openai==1.3.5
 
+# Slack API
+slack-sdk==3.23.0
+
 # Scheduler
 APScheduler==3.10.4
 

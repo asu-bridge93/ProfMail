@@ -1,5 +1,5 @@
 """
-FastAPI ルート定義
+FastAPI ルート定義 (Slack機能追加版)
 """
 import sqlite3
 from datetime import datetime
@@ -136,6 +136,11 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     color: #1565c0;
                     font-weight: bold;
                 }}
+                .btn-slack {{ 
+                    background: linear-gradient(135deg, #4a154b 0%, #611f69 100%);
+                    color: white;
+                    font-weight: bold;
+                }}
                 #process-btn {{
                     border-radius: 40px !important;
                     padding: 22px 48px !important;
@@ -143,12 +148,176 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     font-weight: bold !important;
                     box-shadow: 0 6px 24px rgba(255, 167, 38, 0.18);
                 }}
+                #slack-test-btn {{
+                    border-radius: 30px !important;
+                    padding: 12px 24px !important;
+                    font-size: 1em !important;
+                    margin-top: 10px !important;
+                }}
                 .priority-high {{ border-left-color: #e74c3c; }}
                 .priority-medium {{ border-left-color: #ffa726; }}
                 .priority-low {{ border-left-color: #66bb6a; }}
                 .clickable {{ cursor: pointer; }}
+                
+                /* 🎨 統一されたコピーボタンスタイル */
+                .copy-btn-unified {{
+                    background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-size: 0.9em;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    border: 2px solid rgba(255, 255, 255, 0.2);
+                    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    text-decoration: none;
+                    user-select: none;
+                }}
+                .copy-btn-unified:hover {{
+                    background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+                }}
+                .copy-btn-unified.success {{
+                    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                    animation: successPulse 0.6s ease;
+                }}
+                .copy-btn-unified.small {{
+                    padding: 6px 14px;
+                    font-size: 0.8em;
+                    border-radius: 18px;
+                }}
+                .copy-btn-unified .icon {{
+                    font-size: 1em;
+                    transition: transform 0.3s ease;
+                }}
+                .copy-btn-unified:hover .icon {{
+                    transform: scale(1.1);
+                }}
+                @keyframes successPulse {{
+                    0% {{ transform: scale(1); }}
+                    50% {{ transform: scale(1.05); }}
+                    100% {{ transform: scale(1); }}
+                }}
+                .copy-notification {{
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                    color: white;
+                    padding: 16px 24px;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+                    z-index: 1000;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    animation: slideInRight 0.4s ease, fadeOut 0.4s ease 2.6s forwards;
+                }}
+                @keyframes slideInRight {{
+                    from {{ transform: translateX(400px); opacity: 0; }}
+                    to {{ transform: translateX(0); opacity: 1; }}
+                }}
+                @keyframes fadeOut {{
+                    from {{ opacity: 1; transform: translateX(0); }}
+                    to {{ opacity: 0; transform: translateX(400px); }}
+                }}
             </style>
             <script>
+                // 🎯 統一されたコピー機能
+                class UnifiedCopyManager {{
+                    async copyEmailDraft(emailId) {{
+                        const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
+                        const button = event.target.closest('.copy-btn-unified');
+                        
+                        if (!textarea) {{
+                            this._showNotification('草案が見つかりません', 'error');
+                            return false;
+                        }}
+
+                        const text = textarea.value;
+                        if (!text.trim()) {{
+                            this._showNotification('コピーする内容がありません', 'warning');
+                            return false;
+                        }}
+
+                        return await this.copyToClipboard(text, button, '📋 メール草案をコピーしました！');
+                    }}
+
+                    async copyToClipboard(text, button, successMessage = 'コピーしました！') {{
+                        try {{
+                            await this._performCopy(text);
+                            this._showButtonSuccess(button);
+                            this._showNotification(successMessage, 'success');
+                            return true;
+                        }} catch (error) {{
+                            this._showNotification('コピーに失敗しました', 'error');
+                            return false;
+                        }}
+                    }}
+
+                    async _performCopy(text) {{
+                        if (navigator.clipboard && navigator.clipboard.writeText) {{
+                            await navigator.clipboard.writeText(text);
+                            return;
+                        }}
+                        const tempTextarea = document.createElement('textarea');
+                        tempTextarea.value = text;
+                        tempTextarea.style.position = 'fixed';
+                        tempTextarea.style.opacity = '0';
+                        document.body.appendChild(tempTextarea);
+                        tempTextarea.select();
+                        const success = document.execCommand('copy');
+                        document.body.removeChild(tempTextarea);
+                        if (!success) throw new Error('Fallback copy failed');
+                    }}
+
+                    _showButtonSuccess(button) {{
+                        if (!button) return;
+                        const originalText = button.innerHTML;
+                        button.classList.add('success');
+                        button.innerHTML = '<span class="icon">✅</span><span>コピー完了</span>';
+                        button.disabled = true;
+                        setTimeout(() => {{
+                            button.classList.remove('success');
+                            button.innerHTML = originalText;
+                            button.disabled = false;
+                        }}, 2000);
+                    }}
+
+                    _showNotification(message, type = 'success') {{
+                        const existingNotification = document.querySelector('.copy-notification');
+                        if (existingNotification) existingNotification.remove();
+
+                        const notification = document.createElement('div');
+                        notification.className = 'copy-notification';
+                        const icons = {{ success: '✅', error: '❌', warning: '⚠️' }};
+                        notification.innerHTML = `<span class="icon">${{icons[type] || icons.success}}</span><span>${{message}}</span>`;
+                        
+                        if (type === 'error') {{
+                            notification.style.background = 'linear-gradient(135deg, #f44336 0%, #e57373 100%)';
+                        }} else if (type === 'warning') {{
+                            notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
+                        }}
+
+                        document.body.appendChild(notification);
+                        setTimeout(() => {{ if (notification.parentNode) notification.remove(); }}, 3000);
+                    }}
+                }}
+
+                const copyManager = new UnifiedCopyManager();
+                
+                // グローバル関数
+                async function copyEmailDraft(emailId) {{
+                    return await copyManager.copyEmailDraft(emailId);
+                }}
+                
                 async function processEmails() {{
                     document.getElementById('process-btn').textContent = '処理中...';
                     document.getElementById('process-btn').disabled = true;
@@ -158,7 +327,33 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                         const result = await response.json();
                         
                         if (result.success) {{
-                            alert(`メール処理完了！\\n${{result.processed_count}}件のメールを分析しました。`);
+                            let message = `メール処理完了！\\n`;
+                            
+                            // 基本統計
+                            message += `📧 処理総数: ${{result.processed_count}}件\\n`;
+                            if (result.new_emails_count > 0) {{
+                                message += `🆕 新規メール: ${{result.new_emails_count}}件\\n`;
+                            }}
+                            if (result.updated_emails_count > 0) {{
+                                message += `🔄 更新メール: ${{result.updated_emails_count}}件\\n`;
+                            }}
+                            
+                            // ステータス保持情報
+                            if (result.completed_preserved_count > 0) {{
+                                message += `✅ 完了ステータス保持: ${{result.completed_preserved_count}}件\\n`;
+                            }}
+                            
+                            // 未対応メール
+                            if (result.pending_count) {{
+                                message += `📋 未対応メール: ${{result.pending_count}}件\\n`;
+                            }}
+                            
+                            // Slack通知
+                            if (result.slack_notification_sent) {{
+                                message += `📤 Slack通知も送信しました！`;
+                            }}
+                            
+                            alert(message);
                             location.reload();
                         }} else {{
                             alert('エラー: ' + result.error);
@@ -171,6 +366,102 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     document.getElementById('process-btn').disabled = false;
                 }}
                 
+                async function testSlackNotification() {{
+                    document.getElementById('slack-test-btn').textContent = '送信中...';
+                    document.getElementById('slack-test-btn').disabled = true;
+                    
+                    try {{
+                        const response = await fetch('/slack/test', {{ method: 'POST' }});
+                        const result = await response.json();
+                        
+                        if (result.success) {{
+                            alert('✅ Slackテスト通知を送信しました！\\nSlackチャンネルを確認してください。');
+                        }} else {{
+                            alert('❌ Slack通知送信失敗: ' + (result.error || result.message));
+                        }}
+                    }} catch (error) {{
+                        alert('エラーが発生しました: ' + error.message);
+                    }}
+                    
+                    document.getElementById('slack-test-btn').textContent = 'Slack テスト';
+                    document.getElementById('slack-test-btn').disabled = false;
+                }}
+                
+                async function showSlackDebug() {{
+                    try {{
+                        const response = await fetch('/debug/slack');
+                        const result = await response.json();
+                        
+                        let debugMessage = '🔍 Slack設定デバッグ情報:\\n\\n';
+                        debugMessage += `Slack通知有効: ${{result.debug_info.enabled}}\\n`;
+                        debugMessage += `Webhook URL設定: ${{result.debug_info.has_webhook_url}}\\n`;
+                        debugMessage += `Bot Token設定: ${{result.debug_info.has_bot_token}}\\n`;
+                        debugMessage += `チャンネル設定: ${{result.debug_info.channel}}\\n`;
+                        
+                        if (result.debug_info.available_channels) {{
+                            debugMessage += '\\n📋 利用可能チャンネル:\\n';
+                            result.debug_info.available_channels.slice(0, 5).forEach(ch => {{
+                                debugMessage += `  - ${{ch.name}} (ID: ${{ch.id}})\\n`;
+                            }});
+                        }}
+                        
+                        if (result.debug_info.target_channel_found !== undefined) {{
+                            debugMessage += `\\n🎯 指定チャンネル存在: ${{result.debug_info.target_channel_found}}\\n`;
+                            if (result.debug_info.target_channel_info) {{
+                                debugMessage += `   名前: ${{result.debug_info.target_channel_info.name}}\\n`;
+                                debugMessage += `   ID: ${{result.debug_info.target_channel_info.id}}\\n`;
+                            }}
+                        }}
+                        
+                        if (result.debug_info.channels_error) {{
+                            debugMessage += `\\n❌ チャンネル取得エラー: ${{result.debug_info.channels_error}}\\n`;
+                        }}
+                        
+                        alert(debugMessage);
+                    }} catch (error) {{
+                        alert('デバッグ情報取得エラー: ' + error.message);
+                    }}
+                }}
+                
+                async function showEmailStatus() {{
+                    try {{
+                        const response = await fetch('/debug/email-status');
+                        const result = await response.json();
+                        
+                        let statusMessage = '📊 メール状態統計:\\n\\n';
+                        
+                        // ステータス分布
+                        statusMessage += '📈 ステータス分布:\\n';
+                        for (const [status, count] of Object.entries(result.status_distribution)) {{
+                            const statusEmoji = status === 'pending' ? '📋' : status === 'completed' ? '✅' : '❓';
+                            statusMessage += `   ${{statusEmoji}} ${{status}}: ${{count}}件\\n`;
+                        }}
+                        
+                        // 完了済み統計
+                        if (result.completed_statistics.total_completed > 0) {{
+                            statusMessage += `\\n✅ 完了済み統計:\\n`;
+                            statusMessage += `   総件数: ${{result.completed_statistics.total_completed}}件\\n`;
+                            if (result.completed_statistics.first_completed) {{
+                                statusMessage += `   最初の完了: ${{result.completed_statistics.first_completed.slice(0,16)}}\\n`;
+                            }}
+                            if (result.completed_statistics.last_completed) {{
+                                statusMessage += `   最新の完了: ${{result.completed_statistics.last_completed.slice(0,16)}}\\n`;
+                            }}
+                        }}
+                        
+                        // 最近のメール
+                        statusMessage += `\\n📧 最近の処理メール（上位5件）:\\n`;
+                        result.recent_emails.slice(0, 5).forEach((email, index) => {{
+                            const statusEmoji = email.status === 'pending' ? '📋' : '✅';
+                            statusMessage += `   ${{index + 1}}. ${{statusEmoji}} ${{email.subject}}\\n`;
+                        }});
+                        
+                        alert(statusMessage);
+                    }} catch (error) {{
+                        alert('メール状態確認エラー: ' + error.message);
+                    }}
+                }}
+                
                 function viewCategory(category) {{
                     window.location.href = `/category/${{encodeURIComponent(category)}}`;
                 }}
@@ -180,7 +471,7 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
             <div class="container">
                 <div class="header">
                     <h1>🎓 ProfMail</h1>
-                    <p>AI powered email management for academics</p>
+                    <p>AI powered email management for academics with Slack integration</p>
                     <p><small>最終処理: {email_processor.last_execution.strftime('%Y-%m-%d %H:%M') if email_processor.last_execution else '未実行'}</small></p>
                 </div>
                 
@@ -200,6 +491,12 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                         
                         <div class="action-buttons">
                             <button id="process-btn" class="btn btn-success" onclick="processEmails()">実行</button>
+                            <br>
+                            <button id="slack-test-btn" class="btn btn-slack" onclick="testSlackNotification()">📤 Slack テスト</button>
+                            <br>
+                            <button id="slack-debug-btn" class="btn" onclick="showSlackDebug()" style="background: #666; color: white; font-size: 0.9em;">🔍 Slack設定確認</button>
+                            <br>
+                            <button id="email-status-btn" class="btn" onclick="showEmailStatus()" style="background: #8e24aa; color: white; font-size: 0.9em;">📊 メール状態確認</button>
                         </div>
 
                         <h3 style="color: #1976d2;">優先度別</h3>
@@ -276,18 +573,18 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
     
     @app.post("/process")
     async def process_emails(days: int = 3):
-        """メール処理実行"""
+        """メール処理実行（Slack通知付き）"""
+        result = email_processor.run_manual_processing_with_notification(days=days)
+        return result
+    
+    @app.post("/slack/test")
+    async def test_slack_notification():
+        """Slack通知テスト"""
         try:
-            processed_emails = email_processor.process_emails(days=days)
-            email_processor.last_execution = datetime.now()
-            email_processor.last_tasks = processed_emails
-            
+            success = email_processor.send_test_slack_notification()
             return {
-                "success": True,
-                "processed_count": len(processed_emails),
-                "days_processed": days,
-                "categories": {category: len([e for e in processed_emails if e.get('category') == category]) 
-                             for category in set(e.get('category', 'その他') for e in processed_emails)},
+                "success": success,
+                "message": "テスト通知を送信しました" if success else "通知送信に失敗しました",
                 "timestamp": datetime.now().isoformat()
             }
         except Exception as e:
@@ -314,6 +611,76 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
             return {"success": success}
         except Exception as e:
             return {"success": False, "error": str(e)}
+    
+    @app.get("/debug/slack")
+    async def debug_slack():
+        """Slack設定デバッグ情報"""
+        try:
+            debug_info = email_processor.get_slack_debug_info()
+            return {
+                "message": "Slack設定デバッグ情報",
+                "debug_info": debug_info,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {"error": str(e)}
+    
+    @app.get("/debug/email-status")
+    async def debug_email_status():
+        """デバッグ: メールステータス分布"""
+        try:
+            conn = sqlite3.connect(email_processor.get_database().db_path)
+            cursor = conn.cursor()
+            
+            # ステータス別集計
+            cursor.execute('''
+                SELECT status, COUNT(*) as count
+                FROM emails 
+                GROUP BY status
+            ''')
+            status_counts = dict(cursor.fetchall())
+            
+            # 最近の処理メール（上位10件）
+            cursor.execute('''
+                SELECT subject, status, processed_at, completed_at
+                FROM emails 
+                ORDER BY processed_at DESC 
+                LIMIT 10
+            ''')
+            recent_emails = []
+            for row in cursor.fetchall():
+                recent_emails.append({
+                    "subject": row[0][:50] + "..." if len(row[0]) > 50 else row[0],
+                    "status": row[1],
+                    "processed_at": row[2],
+                    "completed_at": row[3]
+                })
+            
+            # 完了済みメールの統計
+            cursor.execute('''
+                SELECT COUNT(*) as completed_count,
+                       MIN(completed_at) as first_completed,
+                       MAX(completed_at) as last_completed
+                FROM emails 
+                WHERE status = 'completed'
+            ''')
+            completed_stats = cursor.fetchone()
+            
+            conn.close()
+            
+            return {
+                "message": "メールステータス分布",
+                "status_distribution": status_counts,
+                "recent_emails": recent_emails,
+                "completed_statistics": {
+                    "total_completed": completed_stats[0] if completed_stats else 0,
+                    "first_completed": completed_stats[1] if completed_stats else None,
+                    "last_completed": completed_stats[2] if completed_stats else None
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {"error": str(e)}
     
     @app.get("/debug/emails")
     async def debug_emails():
@@ -367,7 +734,7 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
         return {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
-            "version": "3.0.0 - Professor Edition"
+            "version": "3.3.0 - Status Preservation Edition"
         }
 
 
@@ -546,8 +913,166 @@ def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -
                 z-index: 1000;
                 font-weight: bold;
             }}
+            
+            /* 🎨 統一されたコピーボタンスタイル */
+            .copy-btn-unified {{
+                background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-size: 0.9em;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                text-decoration: none;
+                user-select: none;
+            }}
+            .copy-btn-unified:hover {{
+                background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+            }}
+            .copy-btn-unified.success {{
+                background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                animation: successPulse 0.6s ease;
+            }}
+            .copy-btn-unified.small {{
+                padding: 6px 14px;
+                font-size: 0.8em;
+                border-radius: 18px;
+            }}
+            .copy-btn-unified .icon {{
+                font-size: 1em;
+                transition: transform 0.3s ease;
+            }}
+            .copy-btn-unified:hover .icon {{
+                transform: scale(1.1);
+            }}
+            @keyframes successPulse {{
+                0% {{ transform: scale(1); }}
+                50% {{ transform: scale(1.05); }}
+                100% {{ transform: scale(1); }}
+            }}
+            .copy-notification {{
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+                z-index: 1000;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: slideInRight 0.4s ease, fadeOut 0.4s ease 2.6s forwards;
+            }}
+            @keyframes slideInRight {{
+                from {{ transform: translateX(400px); opacity: 0; }}
+                to {{ transform: translateX(0); opacity: 1; }}
+            }}
+            @keyframes fadeOut {{
+                from {{ opacity: 1; transform: translateX(0); }}
+                to {{ opacity: 0; transform: translateX(400px); }}
+            }}
         </style>
         <script>
+            // 🎯 統一されたコピー機能
+            class UnifiedCopyManager {{
+                async copyEmailDraft(emailId) {{
+                    const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
+                    const button = event.target.closest('.copy-btn-unified');
+                    
+                    if (!textarea) {{
+                        this._showNotification('草案が見つかりません', 'error');
+                        return false;
+                    }}
+
+                    const text = textarea.value;
+                    if (!text.trim()) {{
+                        this._showNotification('コピーする内容がありません', 'warning');
+                        return false;
+                    }}
+
+                    return await this.copyToClipboard(text, button, '📋 メール草案をコピーしました！');
+                }}
+
+                async copyToClipboard(text, button, successMessage = 'コピーしました！') {{
+                    try {{
+                        await this._performCopy(text);
+                        this._showButtonSuccess(button);
+                        this._showNotification(successMessage, 'success');
+                        return true;
+                    }} catch (error) {{
+                        this._showNotification('コピーに失敗しました', 'error');
+                        return false;
+                    }}
+                }}
+
+                async _performCopy(text) {{
+                    if (navigator.clipboard && navigator.clipboard.writeText) {{
+                        await navigator.clipboard.writeText(text);
+                        return;
+                    }}
+                    const tempTextarea = document.createElement('textarea');
+                    tempTextarea.value = text;
+                    tempTextarea.style.position = 'fixed';
+                    tempTextarea.style.opacity = '0';
+                    document.body.appendChild(tempTextarea);
+                    tempTextarea.select();
+                    const success = document.execCommand('copy');
+                    document.body.removeChild(tempTextarea);
+                    if (!success) throw new Error('Fallback copy failed');
+                }}
+
+                _showButtonSuccess(button) {{
+                    if (!button) return;
+                    const originalText = button.innerHTML;
+                    button.classList.add('success');
+                    button.innerHTML = '<span class="icon">✅</span><span>コピー完了</span>';
+                    button.disabled = true;
+                    setTimeout(() => {{
+                        button.classList.remove('success');
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }}, 2000);
+                }}
+
+                _showNotification(message, type = 'success') {{
+                    const existingNotification = document.querySelector('.copy-notification');
+                    if (existingNotification) existingNotification.remove();
+
+                    const notification = document.createElement('div');
+                    notification.className = 'copy-notification';
+                    const icons = {{ success: '✅', error: '❌', warning: '⚠️' }};
+                    notification.innerHTML = `<span class="icon">${{icons[type] || icons.success}}</span><span>${{message}}</span>`;
+                    
+                    if (type === 'error') {{
+                        notification.style.background = 'linear-gradient(135deg, #f44336 0%, #e57373 100%)';
+                    }} else if (type === 'warning') {{
+                        notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
+                    }}
+
+                    document.body.appendChild(notification);
+                    setTimeout(() => {{ if (notification.parentNode) notification.remove(); }}, 3000);
+                }}
+            }}
+
+            const copyManager = new UnifiedCopyManager();
+            
+            // グローバル関数
+            async function copyEmailDraft(emailId) {{
+                return await copyManager.copyEmailDraft(emailId);
+            }}
+            
             function showReplyTab(emailId, tabType) {{
                 document.querySelectorAll(`#reply-preview-${{emailId}}, #reply-markdown-${{emailId}}`).forEach(el => el.classList.remove('active'));
                 document.querySelectorAll(`.tab-btn`).forEach(el => el.classList.remove('active'));
@@ -556,37 +1081,16 @@ def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -
             }}
             
             async function copyToClipboard(emailId) {{
-                const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
-                await copyTextToClipboard(textarea.value, 'メール草案をコピーしました！📋');
+                return await copyManager.copyEmailDraft(emailId);
             }}
             
             async function copyTextToClipboard(text, successMessage) {{
-                try {{
-                    await navigator.clipboard.writeText(text);
-                    showCopySuccess(successMessage);
-                }} catch (err) {{
-                    const tempTextarea = document.createElement('textarea');
-                    tempTextarea.value = text;
-                    document.body.appendChild(tempTextarea);
-                    tempTextarea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(tempTextarea);
-                    showCopySuccess(successMessage);
-                }}
+                const button = event ? event.target.closest('.copy-btn-unified') : null;
+                return await copyManager.copyToClipboard(text, button, successMessage);
             }}
             
             function showCopySuccess(message) {{
-                const existingAlert = document.querySelector('.copy-success-alert');
-                if (existingAlert) {{ existingAlert.remove(); }}
-                
-                const alert = document.createElement('div');
-                alert.className = 'copy-success-alert';
-                alert.textContent = message;
-                document.body.appendChild(alert);
-                
-                setTimeout(() => {{
-                    if (alert.parentNode) {{ alert.remove(); }}
-                }}, 3000);
+                copyManager._showNotification(message, 'success');
             }}
             
             async function markCompleted(emailId) {{
@@ -902,6 +1406,94 @@ def _get_category_html_template(category_name: str, pending_emails, completed_em
             }}
         </style>
         <script>
+            // 🎯 統一されたコピー機能
+            class UnifiedCopyManager {{
+                async copyEmailDraft(emailId) {{
+                    const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
+                    const button = event.target.closest('.copy-btn-unified');
+                    
+                    if (!textarea) {{
+                        this._showNotification('草案が見つかりません', 'error');
+                        return false;
+                    }}
+
+                    const text = textarea.value;
+                    if (!text.trim()) {{
+                        this._showNotification('コピーする内容がありません', 'warning');
+                        return false;
+                    }}
+
+                    return await this.copyToClipboard(text, button, '📋 メール草案をコピーしました！');
+                }}
+
+                async copyToClipboard(text, button, successMessage = 'コピーしました！') {{
+                    try {{
+                        await this._performCopy(text);
+                        this._showButtonSuccess(button);
+                        this._showNotification(successMessage, 'success');
+                        return true;
+                    }} catch (error) {{
+                        this._showNotification('コピーに失敗しました', 'error');
+                        return false;
+                    }}
+                }}
+
+                async _performCopy(text) {{
+                    if (navigator.clipboard && navigator.clipboard.writeText) {{
+                        await navigator.clipboard.writeText(text);
+                        return;
+                    }}
+                    const tempTextarea = document.createElement('textarea');
+                    tempTextarea.value = text;
+                    tempTextarea.style.position = 'fixed';
+                    tempTextarea.style.opacity = '0';
+                    document.body.appendChild(tempTextarea);
+                    tempTextarea.select();
+                    const success = document.execCommand('copy');
+                    document.body.removeChild(tempTextarea);
+                    if (!success) throw new Error('Fallback copy failed');
+                }}
+
+                _showButtonSuccess(button) {{
+                    if (!button) return;
+                    const originalText = button.innerHTML;
+                    button.classList.add('success');
+                    button.innerHTML = '<span class="icon">✅</span><span>コピー完了</span>';
+                    button.disabled = true;
+                    setTimeout(() => {{
+                        button.classList.remove('success');
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }}, 2000);
+                }}
+
+                _showNotification(message, type = 'success') {{
+                    const existingNotification = document.querySelector('.copy-notification');
+                    if (existingNotification) existingNotification.remove();
+
+                    const notification = document.createElement('div');
+                    notification.className = 'copy-notification';
+                    const icons = {{ success: '✅', error: '❌', warning: '⚠️' }};
+                    notification.innerHTML = `<span class="icon">${{icons[type] || icons.success}}</span><span>${{message}}</span>`;
+                    
+                    if (type === 'error') {{
+                        notification.style.background = 'linear-gradient(135deg, #f44336 0%, #e57373 100%)';
+                    }} else if (type === 'warning') {{
+                        notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
+                    }}
+
+                    document.body.appendChild(notification);
+                    setTimeout(() => {{ if (notification.parentNode) notification.remove(); }}, 3000);
+                }}
+            }}
+
+            const copyManager = new UnifiedCopyManager();
+            
+            // グローバル関数
+            async function copyEmailDraft(emailId) {{
+                return await copyManager.copyEmailDraft(emailId);
+            }}
+            
             function showTab(tabName) {{
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
@@ -917,20 +1509,7 @@ def _get_category_html_template(category_name: str, pending_emails, completed_em
             }}
             
             async function copyToClipboard(emailId) {{
-                const textarea = document.querySelector(`#reply-markdown-${{emailId}} .markdown-text`);
-                try {{
-                    await navigator.clipboard.writeText(textarea.value);
-                    const btn = event.target;
-                    const originalText = btn.textContent;
-                    btn.textContent = '✅ コピー済み';
-                    setTimeout(() => {{
-                        btn.textContent = originalText;
-                    }}, 2000);
-                }} catch (err) {{
-                    textarea.select();
-                    document.execCommand('copy');
-                    alert('返信草案をコピーしました');
-                }}
+                return await copyManager.copyEmailDraft(emailId);
             }}
             
             async function markCompleted(emailId) {{
