@@ -27,8 +27,8 @@ APP_DESCRIPTION: str = "大学教授向けメール管理・返信支援シス�
 APP_VERSION: str = "3.0.0"
 
 # スケジューラー設定
-SCHEDULER_HOUR: int = 8
-SCHEDULER_MINUTE: int = 0
+SCHEDULER_HOUR: int = 14
+SCHEDULER_MINUTE: int = 51
 
 # メール処理設定
 DEFAULT_DAYS_BACK: int = 3
@@ -54,3 +54,4 @@ OPENAI_MAX_TOKENS: int = 1500
 # Web UI設定
 WEB_HOST: str = "0.0.0.0"
 WEB_PORT: int = 8000
+WEB_RELOAD: bool = os.getenv('PROFMAIL_RELOAD', 'false').lower() == 'true'

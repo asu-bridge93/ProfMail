@@ -8,14 +8,28 @@ from config import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_
 
 
 class OpenAIService:
+    _instance: Optional['OpenAIService'] = None
+    _initialized = False
+    
+    def __new__(cls):
+        """シングルトンパターン実装"""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self):
-        """OpenAI API サービス初期化"""
+        """OpenAI API サービス初期化（1回だけ実行）"""
+        if OpenAIService._initialized:
+            return
+            
         self.client = None
         if OPENAI_API_KEY:
             self.client = OpenAI(api_key=OPENAI_API_KEY)
             print("✅ OpenAI API 初期化完了")
         else:
             print("⚠️ OpenAI API キーが設定されていません")
+        
+        OpenAIService._initialized = True
     
     def categorize_and_analyze_email(self, email_content: str, subject: str, sender: str) -> Optional[Dict[str, Any]]:
         """メールのカテゴリ分類・分析・返信草案生成"""

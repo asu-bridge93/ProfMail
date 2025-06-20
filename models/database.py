@@ -8,10 +8,23 @@ from config import DATABASE_PATH
 
 
 class ProfessorEmailDatabase:
+    _instance: Optional['ProfessorEmailDatabase'] = None
+    _initialized = False
+    
+    def __new__(cls, db_path: str = DATABASE_PATH):
+        """シングルトンパターン実装"""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self, db_path: str = DATABASE_PATH):
-        """教授向けメールデータベース"""
+        """教授向けメールデータベース（1回だけ初期化）"""
+        if ProfessorEmailDatabase._initialized:
+            return
+            
         self.db_path = db_path
         self.init_database()
+        ProfessorEmailDatabase._initialized = True
     
     def init_database(self):
         """データベース・テーブル作成"""

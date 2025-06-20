@@ -2,7 +2,7 @@
 メール処理サービス
 """
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from apscheduler.schedulers.background import BackgroundScheduler
 from models.database import ProfessorEmailDatabase
 from services.gmail_service import GmailService
@@ -11,8 +11,20 @@ from config import SCHEDULER_HOUR, SCHEDULER_MINUTE, DEFAULT_DAYS_BACK
 
 
 class EmailProcessor:
+    _instance: Optional['EmailProcessor'] = None
+    _initialized = False
+    
+    def __new__(cls):
+        """シングルトンパターン実装"""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self):
-        """メール処理サービス初期化"""
+        """メール処理サービス初期化（1回だけ実行）"""
+        if EmailProcessor._initialized:
+            return
+        
         self.db = ProfessorEmailDatabase()
         self.gmail_service = GmailService()
         self.openai_service = OpenAIService()
@@ -20,6 +32,8 @@ class EmailProcessor:
         self.last_execution = None
         self.last_tasks = []  # 最新タスクリスト
         self.setup_scheduler()
+        
+        EmailProcessor._initialized = True
     
     def process_emails(self, days: int = DEFAULT_DAYS_BACK) -> List[Dict[str, Any]]:
         """メール処理・分析・分類"""
@@ -94,7 +108,11 @@ class EmailProcessor:
             return []
     
     def setup_scheduler(self):
-        """スケジューラー設定"""
+        """スケジューラー設定（重複防止）"""
+        if self.scheduler is not None:
+            print("⚠️ スケジューラーは既に設定済みです。")
+            return
+            
         self.scheduler = BackgroundScheduler()
         
         # 毎日朝8時に実行（教授が出勤前）
@@ -106,8 +124,11 @@ class EmailProcessor:
             id='daily_email_processing'
         )
         
-        self.scheduler.start()
-        print(f"⏰ スケジューラー開始: 毎日 {SCHEDULER_HOUR:02d}:{SCHEDULER_MINUTE:02d} に自動実行")
+        try:
+            self.scheduler.start()
+            print(f"⏰ スケジューラー開始: 毎日 {SCHEDULER_HOUR:02d}:{SCHEDULER_MINUTE:02d} に自動実行")
+        except Exception as e:
+            print(f"⚠️ スケジューラー開始エラー: {e}")
     
     def get_database(self) -> ProfessorEmailDatabase:
         """データベースインスタンス取得"""
