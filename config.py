@@ -31,7 +31,7 @@ GMAIL_TOKEN_FILE: str = 'token.pickle'
 # アプリケーション設定
 APP_TITLE: str = "ProfMail"
 APP_DESCRIPTION: str = "大学教授向けメール管理・返信支援システム"
-APP_VERSION: str = "3.1.0"
+APP_VERSION: str = "1.0.0"
 
 # スケジューラー設定
 SCHEDULER_HOUR: int = 8
