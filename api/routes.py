@@ -35,87 +35,103 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                     margin: 0; 
                     padding: 45px; 
-                    background: #fff9c4; 
+                    background: linear-gradient(135deg, #fdfcf5 0%, #f8f9fb 100%); 
                     min-height: 100vh; 
+                    color: #2c3e50;
                 }}
                 .container {{ max-width: 1200px; margin: 0 auto; }}
                 .header {{ 
                     text-align: center; 
-                    color: #1565c0; 
+                    color: #34495e; 
                     margin-bottom: 30px; 
-                    background: white;
+                    background: rgba(255, 255, 255, 0.9);
                     padding: 20px;
                     border-radius: 15px;
-                    box-shadow: 0 8px 32px rgba(21, 101, 192, 0.1);
-                    border: 2px solid #ffd54f;
+                    box-shadow: 0 4px 20px rgba(52, 73, 94, 0.08);
+                    border: 1px solid #e8f4fd;
                 }}
                 .header h1 {{ 
                     font-size: 2.5em; 
                     margin-bottom: 10px; 
-                    background: linear-gradient(45deg, #1565c0, #ffa726);
+                    background: linear-gradient(45deg, #4a90e2, #6bb6ff);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
                     background-clip: text;
                 }}
-                .header p {{ font-size: 1.2em; opacity: 0.8; color: #1565c0; }}
+                .header p {{ font-size: 1.2em; opacity: 0.8; color: #5a6c7d; }}
                 .dashboard {{ display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }}
                 .sidebar {{ 
-                    background: white; 
+                    background: rgba(255, 255, 255, 0.95); 
                     border-radius: 15px; 
                     padding: 20px; 
-                    box-shadow: 0 8px 32px rgba(21, 101, 192, 0.1);
-                    border: 1px solid #e3f2fd;
+                    box-shadow: 0 4px 20px rgba(52, 73, 94, 0.06);
+                    border: 1px solid #e8f4fd;
                 }}
                 .main-content {{ 
-                    background: white; 
+                    background: rgba(255, 255, 255, 0.95); 
                     border-radius: 15px; 
                     padding: 20px; 
-                    box-shadow: 0 8px 32px rgba(21, 101, 192, 0.1);
-                    border: 1px solid #e3f2fd;
+                    box-shadow: 0 4px 20px rgba(52, 73, 94, 0.06);
+                    border: 1px solid #e8f4fd;
                 }}
                 .stats-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }}
                 .stat-box {{ 
-                    background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%); 
+                    background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
                     padding: 20px; 
-                    border-radius: 10px; 
+                    border-radius: 12px; 
                     text-align: center; 
                     color: white;
                     text-decoration: none;
                     transition: transform 0.3s ease;
-                    border: 2px solid #ffd54f;
+                    border: 1px solid #e1f4fd;
+                    box-shadow: 0 2px 12px rgba(74, 144, 226, 0.15);
                 }}
-                .stat-box:hover {{ transform: translateY(-3px); }}
+                .stat-box:hover {{ transform: translateY(-2px); box-shadow: 0 4px 20px rgba(74, 144, 226, 0.25); }}
                 .stat-number {{ font-size: 2em; font-weight: bold; }}
-                .stat-label {{ font-size: 0.9em; opacity: 0.9; }}
+                .stat-label {{ font-size: 0.9em; opacity: 0.95; }}
                 .category-list {{ list-style: none; padding: 0; }}
                 .category-item {{ 
-                    background: #f8f9fa; 
+                    background: #fbfcfd; 
                     margin: 10px 0; 
                     padding: 15px; 
-                    border-radius: 8px; 
+                    border-radius: 10px; 
                     cursor: pointer; 
                     transition: all 0.3s; 
-                    border-left: 4px solid #1976d2;
-                    border: 1px solid #e3f2fd;
+                    border-left: 4px solid #6bb6ff;
+                    border: 1px solid #e8f4fd;
+                    box-shadow: 0 1px 6px rgba(52, 73, 94, 0.04);
                 }}
                 .category-item:hover {{ 
-                    transform: translateX(5px); 
-                    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.2);
-                    background: #e3f2fd;
+                    transform: translateX(3px); 
+                    box-shadow: 0 2px 12px rgba(107, 182, 255, 0.15);
+                    background: #f0f8ff;
+                    border-left-color: #4a90e2;
                 }}
                 .category-icon {{ font-size: 1.5em; margin-right: 10px; }}
                 .category-count {{ 
                     float: right; 
-                    background: #ffa726; 
+                    background: linear-gradient(135deg, #6bb6ff, #4a90e2); 
                     color: white; 
-                    padding: 4px 8px; 
+                    padding: 4px 10px; 
                     border-radius: 12px; 
                     font-size: 0.8em; 
-                    font-weight: bold;
+                    font-weight: 600;
+                    box-shadow: 0 1px 4px rgba(74, 144, 226, 0.2);
+                }}
+                /* 0件の場合の薄い青スタイル */
+                .category-count-zero {{ 
+                    float: right; 
+                    background: linear-gradient(135deg, #b3d9ff, #87ceeb); 
+                    color: white; 
+                    padding: 4px 10px; 
+                    border-radius: 12px; 
+                    font-size: 0.8em; 
+                    font-weight: 600;
+                    box-shadow: 0 1px 4px rgba(135, 217, 255, 0.2);
                 }}
                 .action-buttons {{ padding: 30px; margin: 20px 0; text-align: center; }}
                 .btn {{ 
-                    background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%); 
+                    background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
                     color: white; 
                     padding: 12px 24px; 
                     border: none; 
@@ -125,28 +141,47 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     text-decoration: none; 
                     display: inline-block; 
                     transition: all 0.3s;
-                    border: 2px solid #ffd54f;
+                    border: 1px solid #e1f4fd;
+                    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+                    font-weight: 500;
+                    min-width: 300px;
                 }}
                 .btn:hover {{ 
-                    transform: translateY(-2px); 
-                    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+                    transform: translateY(-1px); 
+                    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
                 }}
                 .btn-success {{ 
-                    background: linear-gradient(135deg, #ffa726 0%, #ffb74d 100%);
-                    color: #1565c0;
-                    font-weight: bold;
+                    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+                    color: #2d3436;
+                    font-weight: 600;
+                    box-shadow: 0 2px 8px rgba(253, 203, 110, 0.3);
+                }}
+                .btn-success:hover {{ 
+                    box-shadow: 0 4px 16px rgba(253, 203, 110, 0.4);
+                }}
+                /* 完了済みボタン用の緑色スタイル */
+                .btn-completed {{ 
+                    background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
+                    color: white;
+                    font-weight: 600;
+                    box-shadow: 0 2px 8px rgba(0, 206, 201, 0.3);
+                    opacity: 0.8;
+                }}
+                .btn-completed:hover {{ 
+                    box-shadow: 0 4px 16px rgba(0, 206, 201, 0.4);
+                    opacity: 1;
                 }}
                 .btn-slack {{ 
-                    background: linear-gradient(135deg, #4a154b 0%, #611f69 100%);
+                    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
                     color: white;
-                    font-weight: bold;
+                    font-weight: 500;
                 }}
                 #process-btn {{
                     border-radius: 40px !important;
                     padding: 22px 48px !important;
                     font-size: 1.5em !important;
-                    font-weight: bold !important;
-                    box-shadow: 0 6px 24px rgba(255, 167, 38, 0.18);
+                    font-weight: 600 !important;
+                    box-shadow: 0 4px 16px rgba(253, 203, 110, 0.25);
                 }}
                 #slack-test-btn {{
                     border-radius: 30px !important;
@@ -154,24 +189,70 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     font-size: 1em !important;
                     margin-top: 10px !important;
                 }}
-                .priority-high {{ border-left-color: #e74c3c; }}
-                .priority-medium {{ border-left-color: #ffa726; }}
-                .priority-low {{ border-left-color: #66bb6a; }}
+                .priority-high {{ border-left-color: #ff7675; }}
+                .priority-medium {{ border-left-color: #fdcb6e; }}
+                .priority-low {{ border-left-color: #81ecec; }}
                 .clickable {{ cursor: pointer; }}
+                
+                /* 🎯 ローディングスピナー */
+                .loading-spinner {{
+                    display: inline-block;
+                    width: 20px;
+                    height: 20px;
+                    border: 3px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    border-top-color: #fff;
+                    animation: spin 1s ease-in-out infinite;
+                    margin-right: 8px;
+                }}
+                
+                .loading-spinner.large {{
+                    width: 24px;
+                    height: 24px;
+                    border-width: 4px;
+                }}
+                
+                @keyframes spin {{
+                    to {{ transform: rotate(360deg); }}
+                }}
+                
+                /* ボタンローディング状態 */
+                .btn.loading {{
+                    opacity: 0.8;
+                    cursor: not-allowed;
+                    position: relative;
+                    min-width: 180px;
+                }}
+                
+                .btn.loading:hover {{
+                    transform: none !important;
+                    box-shadow: none !important;
+                }}
+                
+                /* パルス効果 */
+                .processing-pulse {{
+                    animation: pulse 2s ease-in-out infinite;
+                }}
+                
+                @keyframes pulse {{
+                    0% {{ opacity: 1; }}
+                    50% {{ opacity: 0.7; }}
+                    100% {{ opacity: 1; }}
+                }}
                 
                 /* 🎨 統一されたコピーボタンスタイル */
                 .copy-btn-unified {{
-                    background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+                    background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
                     color: white;
                     border: none;
                     padding: 10px 20px;
                     border-radius: 25px;
                     cursor: pointer;
                     font-size: 0.9em;
-                    font-weight: 600;
+                    font-weight: 500;
                     transition: all 0.3s ease;
-                    border: 2px solid rgba(255, 255, 255, 0.2);
-                    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+                    border: 1px solid rgba(107, 182, 255, 0.2);
+                    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
                     display: inline-flex;
                     align-items: center;
                     gap: 8px;
@@ -179,12 +260,12 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     user-select: none;
                 }}
                 .copy-btn-unified:hover {{
-                    background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+                    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.25);
                 }}
                 .copy-btn-unified.success {{
-                    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                    background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
                     animation: successPulse 0.6s ease;
                 }}
                 .copy-btn-unified.small {{
@@ -208,13 +289,13 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     position: fixed;
                     top: 20px;
                     right: 20px;
-                    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                    background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
                     color: white;
                     padding: 16px 24px;
                     border-radius: 12px;
-                    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+                    box-shadow: 0 6px 24px rgba(0, 206, 201, 0.25);
                     z-index: 1000;
-                    font-weight: 600;
+                    font-weight: 500;
                     display: flex;
                     align-items: center;
                     gap: 10px;
@@ -319,14 +400,19 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                 }}
                 
                 async function processEmails() {{
-                    document.getElementById('process-btn').textContent = '処理中...';
-                    document.getElementById('process-btn').disabled = true;
+                    const button = document.getElementById('process-btn');
+                    
+                    // ローディング状態開始
+                    setButtonLoading(button, '✉️分析中...', true);
                     
                     try {{
                         const response = await fetch('/process', {{ method: 'POST' }});
                         const result = await response.json();
                         
                         if (result.success) {{
+                            // 成功状態表示
+                            setButtonLoading(button, '✅ 処理完了！', false);
+                            
                             let message = `メール処理完了！\\n`;
                             
                             // 基本統計
@@ -353,38 +439,75 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                                 message += `📤 Slack通知も送信しました！`;
                             }}
                             
-                            alert(message);
-                            location.reload();
+                            setTimeout(() => {{
+                                alert(message);
+                                location.reload();
+                            }}, 800); // 成功状態を少し見せてからアラート
                         }} else {{
-                            alert('エラー: ' + result.error);
+                            setButtonLoading(button, '❌ エラー', false);
+                            setTimeout(() => {{
+                                alert('エラー: ' + result.error);
+                                resetButton(button, '📬 今すぐ処理');
+                            }}, 800);
                         }}
                     }} catch (error) {{
-                        alert('エラーが発生しました: ' + error.message);
+                        setButtonLoading(button, '❌ エラー', false);
+                        setTimeout(() => {{
+                            alert('エラーが発生しました: ' + error.message);
+                            resetButton(button, '📬 今すぐ処理');
+                        }}, 800);
                     }}
-                    
-                    document.getElementById('process-btn').textContent = '📬 今すぐ処理';
-                    document.getElementById('process-btn').disabled = false;
                 }}
                 
                 async function testSlackNotification() {{
-                    document.getElementById('slack-test-btn').textContent = '送信中...';
-                    document.getElementById('slack-test-btn').disabled = true;
+                    const button = document.getElementById('slack-test-btn');
+                    
+                    // ローディング状態開始
+                    setButtonLoading(button, '📤 送信中...', false);
                     
                     try {{
                         const response = await fetch('/slack/test', {{ method: 'POST' }});
                         const result = await response.json();
                         
                         if (result.success) {{
-                            alert('✅ Slackテスト通知を送信しました！\\nSlackチャンネルを確認してください。');
+                            setButtonLoading(button, '✅ 送信完了！', false);
+                            setTimeout(() => {{
+                                alert('✅ Slackテスト通知を送信しました！\\nSlackチャンネルを確認してください。');
+                                resetButton(button, '📤 Slack テスト');
+                            }}, 800);
                         }} else {{
-                            alert('❌ Slack通知送信失敗: ' + (result.error || result.message));
+                            setButtonLoading(button, '❌ 失敗', false);
+                            setTimeout(() => {{
+                                alert('❌ Slack通知送信失敗: ' + (result.error || result.message));
+                                resetButton(button, '📤 Slack テスト');
+                            }}, 800);
                         }}
                     }} catch (error) {{
-                        alert('エラーが発生しました: ' + error.message);
+                        setButtonLoading(button, '❌ エラー', false);
+                        setTimeout(() => {{
+                            alert('エラーが発生しました: ' + error.message);
+                            resetButton(button, '📤 Slack テスト');
+                        }}, 800);
                     }}
+                }}
+                
+                // ボタンローディング状態制御関数
+                function setButtonLoading(button, text, useSpinner = true) {{
+                    button.disabled = true;
+                    button.classList.add('loading');
                     
-                    document.getElementById('slack-test-btn').textContent = 'Slack テスト';
-                    document.getElementById('slack-test-btn').disabled = false;
+                    if (useSpinner) {{
+                        button.innerHTML = `<span class="loading-spinner"></span>${{text}}`;
+                    }} else {{
+                        button.innerHTML = text;
+                        button.classList.add('processing-pulse');
+                    }}
+                }}
+                
+                function resetButton(button, originalText) {{
+                    button.disabled = false;
+                    button.classList.remove('loading', 'processing-pulse');
+                    button.innerHTML = originalText;
                 }}
                 
                 async function showSlackDebug() {{
@@ -539,7 +662,7 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                                 <div class="stat-number">{stats.get('pending_emails', 0)}</div>
                                 <div class="stat-label">未対応</div>
                             </a>
-                            <a href="/completed" class="stat-box clickable">
+                            <a href="/completed" class="stat-box clickable btn-completed">
                                 <div class="stat-number">{stats.get('completed_emails', 0)}</div>
                                 <div class="stat-label">完了済み</div>
                             </a>
@@ -552,21 +675,21 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                         <h3 style="color: #1976d2;">優先度別</h3>
                         <div style="display: flex; justify-content: space-around; margin: 50px 0;">
                             <a href="/priority/high" style="text-decoration: none; color: inherit;">
-                                <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #ffebee; border: 2px solid #e74c3c;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                    <div style="font-size: 2em; color: #e74c3c; font-weight: bold;">{stats.get('priority_stats', {}).get('高', 0)}</div>
-                                    <div style="color: #e74c3c; font-weight: bold;">高</div>
+                                <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #fef5f5; border: 1px solid #ff7675;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                    <div style="font-size: 2em; color: #ff7675; font-weight: bold;">{stats.get('priority_stats', {}).get('高', 0)}</div>
+                                    <div style="color: #ff7675; font-weight: bold;">高</div>
                                 </div>
                             </a>
                             <a href="/priority/medium" style="text-decoration: none; color: inherit;">
-                                <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #fff8e1; border: 2px solid #ffa726;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                    <div style="font-size: 2em; color: #ffa726; font-weight: bold;">{stats.get('priority_stats', {}).get('中', 0)}</div>
-                                    <div style="color: #ffa726; font-weight: bold;">中</div>
+                                <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #fffef7; border: 1px solid #fdcb6e;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                    <div style="font-size: 2em; color: #fdcb6e; font-weight: bold;">{stats.get('priority_stats', {}).get('中', 0)}</div>
+                                    <div style="color: #fdcb6e; font-weight: bold;">中</div>
                                 </div>
                             </a>
                             <a href="/priority/low" style="text-decoration: none; color: inherit;">
-                                <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #e8f5e8; border: 2px solid #66bb6a;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                    <div style="font-size: 2em; color: #66bb6a; font-weight: bold;">{stats.get('priority_stats', {}).get('低', 0)}</div>
-                                    <div style="color: #66bb6a; font-weight: bold;">低</div>
+                                <div style="text-align: center; padding: 30px; border-radius: 12px; transition: all 0.3s; cursor: pointer; background: #f0fffe; border: 1px solid #81ecec;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                    <div style="font-size: 2em; color: #81ecec; font-weight: bold;">{stats.get('priority_stats', {}).get('低', 0)}</div>
+                                    <div style="color: #81ecec; font-weight: bold;">低</div>
                                 </div>
                             </a>
                         </div>
@@ -851,7 +974,7 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
         return {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
-            "version": "3.3.0 - Status Preservation Edition"
+            "version": "3.4.0 - Enhanced UX Edition"
         }
 
 
@@ -1123,12 +1246,25 @@ def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -
                 }}
 
                 async copyToClipboard(text, button, successMessage = 'コピーしました！') {{
+                    // ボタンローディング開始
+                    const originalHtml = button ? button.innerHTML : '';
+                    if (button) {{
+                        button.innerHTML = '<span class="loading-spinner"></span>コピー中...';
+                        button.disabled = true;
+                        button.classList.add('loading');
+                    }}
+                    
                     try {{
                         await this._performCopy(text);
-                        this._showButtonSuccess(button);
+                        this._showButtonSuccess(button, originalHtml);
                         this._showNotification(successMessage, 'success');
                         return true;
                     }} catch (error) {{
+                        if (button) {{
+                            button.innerHTML = originalHtml;
+                            button.disabled = false;
+                            button.classList.remove('loading');
+                        }}
                         this._showNotification('コピーに失敗しました', 'error');
                         return false;
                     }}
@@ -1150,15 +1286,17 @@ def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -
                     if (!success) throw new Error('Fallback copy failed');
                 }}
 
-                _showButtonSuccess(button) {{
+                _showButtonSuccess(button, originalHtml) {{
                     if (!button) return;
-                    const originalText = button.innerHTML;
+                    
+                    button.classList.remove('loading');
                     button.classList.add('success');
                     button.innerHTML = '<span class="icon">✅</span><span>コピー完了</span>';
                     button.disabled = true;
+                    
                     setTimeout(() => {{
                         button.classList.remove('success');
-                        button.innerHTML = originalText;
+                        button.innerHTML = originalHtml;
                         button.disabled = false;
                     }}, 2000);
                 }}
@@ -1317,6 +1455,18 @@ def _get_completed_html_template(emails) -> str:
             }}
             .btn-primary {{ background: #1976d2; color: white; }}
             .btn-success {{ background: #66bb6a; color: white; }}
+            /* 完了済みボタン用の緑色スタイル */
+            .btn-completed {{ 
+                background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
+                color: white;
+                font-weight: 600;
+                box-shadow: 0 2px 8px rgba(0, 206, 201, 0.3);
+                opacity: 0.8;
+            }}
+            .btn-completed:hover {{ 
+                box-shadow: 0 4px 16px rgba(0, 206, 201, 0.4);
+                opacity: 1;
+            }}
             .category-badge {{ 
                 background: #66bb6a; 
                 color: white; 

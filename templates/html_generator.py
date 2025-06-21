@@ -98,10 +98,12 @@ def generate_category_list(categories: Dict[str, str], stats: Dict[str, Any]) ->
     items = []
     for category, icon in categories.items():
         count = stats.get('category_stats', {}).get(category, 0)
+        # 件数に応じてクラスを設定
+        count_class = "category-count-zero" if count == 0 else "category-count"
         item = f'''<li class="category-item" onclick="viewCategory('{category}')">
             <span class="category-icon">{icon}</span>
             {category}
-            <span class="category-count">{count}</span>
+            <span class="{count_class}">{count}</span>
         </li>'''
         items.append(item)
     return ''.join(items)
