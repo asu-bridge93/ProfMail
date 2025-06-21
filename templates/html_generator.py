@@ -143,7 +143,7 @@ def generate_completed_email_rows(emails: List[Dict[str, Any]]) -> str:
 
 
 def generate_email_table_rows(emails: List[Dict[str, Any]]) -> str:
-    """メールテーブル行生成"""
+    """メールテーブル行生成（固定レイアウト対応）"""
     if not emails:
         return '<tr><td colspan="6" style="text-align: center; padding: 40px;">📭 メールがありません</td></tr>'
     
@@ -161,7 +161,7 @@ def generate_email_table_rows(emails: List[Dict[str, Any]]) -> str:
         elif body:
             # AI分析前の場合はメール本文のプレビューを表示
             body_preview = body.replace('\n', ' ').replace('\r', ' ').strip()
-            content_display = truncate_text(body_preview, 100)
+            content_display = truncate_text(body_preview, 60)
         else:
             content_display = "メール内容を取得中..."
         
@@ -171,15 +171,22 @@ def generate_email_table_rows(emails: List[Dict[str, Any]]) -> str:
         urgency_score = email.get("urgency_score", 5)
         gmail_link = email.get("gmail_link", "#")
         
-        subject_display = truncate_text(subject, 50)
-        content_display = truncate_text(content_display, 80)
-        sender_display = truncate_text(sender, 30)
+        # 文字数制限を調整（固定幅に合わせて）
+        subject_display = truncate_text(subject, 35)
+        content_display = truncate_text(content_display, 50)
+        sender_display = truncate_text(sender, 20)
+        
+        # HTMLエスケープ処理
+        subject_escaped = subject.replace('"', '&quot;').replace("'", "&#39;")
+        content_escaped = content_display.replace('"', '&quot;').replace("'", "&#39;")
+        sender_escaped = sender.replace('"', '&quot;').replace("'", "&#39;")
         
         row = f'''<tr class="priority-{priority.lower()}">
-            <td><strong>{subject_display}</strong><br>
-                <small>{content_display}</small>
+            <td>
+                <strong class="subject-cell" title="{subject_escaped}">{subject_display}</strong>
+                <small class="subject-preview" title="{content_escaped}">{content_display}</small>
             </td>
-            <td>{sender_display}</td>
+            <td class="sender-cell" title="{sender_escaped}">{sender_display}</td>
             <td><span class="category-badge">{category}</span></td>
             <td>{priority}</td>
             <td>{urgency_score}/10</td>

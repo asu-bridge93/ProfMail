@@ -977,7 +977,6 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
             "version": "3.4.0 - Enhanced UX Edition"
         }
 
-
 def _get_common_styles():
     """共通CSSスタイル"""
     return """
@@ -1270,7 +1269,7 @@ def _get_common_styles():
             to { opacity: 0; transform: translateX(400px); }
         }
         
-        /* テーブルスタイル */
+        /* テーブルスタイル - 固定レイアウト */
         .email-table { 
             background: rgba(255, 255, 255, 0.95); 
             border-radius: 15px; 
@@ -1278,7 +1277,11 @@ def _get_common_styles():
             box-shadow: 0 4px 20px rgba(52, 73, 94, 0.06);
             border: 1px solid #e8f4fd;
         }
-        .email-table table { width: 100%; border-collapse: collapse; }
+        .email-table table { 
+            width: 100%; 
+            border-collapse: collapse;
+            table-layout: fixed; /* 固定レイアウト */
+        }
         .email-table th { 
             background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
             color: white; 
@@ -1290,8 +1293,55 @@ def _get_common_styles():
             padding: 18px; 
             border-bottom: 1px solid #e8f4fd; 
             vertical-align: top;
+            word-wrap: break-word;
+            overflow: hidden;
         }
         .email-table tr:hover { background: linear-gradient(135deg, #f8f9fb 0%, #e8f4fd 50%); }
+        
+        /* 列幅の固定設定 */
+        .email-table th:nth-child(1),
+        .email-table td:nth-child(1) { width: 40%; } /* 件名 */
+        .email-table th:nth-child(2),
+        .email-table td:nth-child(2) { width: 20%; } /* 送信者 */
+        .email-table th:nth-child(3),
+        .email-table td:nth-child(3) { width: 12%; } /* カテゴリ */
+        .email-table th:nth-child(4),
+        .email-table td:nth-child(4) { width: 8%; }  /* 優先度 */
+        .email-table th:nth-child(5),
+        .email-table td:nth-child(5) { width: 8%; }  /* 緊急度 */
+        .email-table th:nth-child(6),
+        .email-table td:nth-child(6) { width: 12%; } /* アクション */
+        
+        /* 長いテキストの省略表示 */
+        .email-table .subject-cell {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .email-table .subject-preview {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+        .email-table .sender-cell {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* テーブル内のボタンスタイル */
+        .email-table .btn {
+            padding: 6px 12px;
+            font-size: 0.8em;
+            margin: 2px;
+            min-width: auto;
+        }
+        
         .completed-item { 
             background: linear-gradient(135deg, #f0fffe 0%, #e8f5e8 100%); 
             opacity: 0.8; 
@@ -1350,7 +1400,6 @@ def _get_common_styles():
         .priority-medium .priority-badge { background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); }
         .priority-low .priority-badge { background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%); }
     """
-
 
 def _get_common_script():
     """共通JavaScript"""
