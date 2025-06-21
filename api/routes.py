@@ -1,5 +1,5 @@
 """
-FastAPI ルート定義 (Slack機能追加版)
+FastAPI ルート定義 (統一UI版)
 """
 import sqlite3
 from datetime import datetime
@@ -978,8 +978,522 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
         }
 
 
+def _get_common_styles():
+    """共通CSSスタイル"""
+    return """
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 45px; 
+            background: linear-gradient(135deg, #fdfcf5 0%, #f8f9fb 100%); 
+            min-height: 100vh; 
+            color: #2c3e50;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { 
+            color: #34495e; 
+            margin-bottom: 30px; 
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(52, 73, 94, 0.08);
+            border: 1px solid #e8f4fd;
+            position: relative;
+        }
+        .header.dashboard {
+            text-align: center;
+        }
+        .header.page-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-align: left;
+        }
+        .header h1 { 
+            font-size: 2.5em; 
+            margin-bottom: 10px; 
+            background: linear-gradient(45deg, #4a90e2, #6bb6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header h2 { 
+            color: #4a90e2; 
+            margin-bottom: 10px;
+        }
+        .back-btn { 
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
+            color: white; 
+            padding: 12px 16px; 
+            border: none; 
+            border-radius: 50%; 
+            text-decoration: none; 
+            margin-right: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+            font-weight: 500;
+            font-size: 1.2em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 33px;
+            height: 33px;
+        }
+        .back-btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+        }
+        .email-card { 
+            background: rgba(255, 255, 255, 0.95); 
+            margin: 20px 0; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 20px rgba(52, 73, 94, 0.06); 
+            overflow: hidden;
+            border: 1px solid #e8f4fd;
+            transition: all 0.3s ease;
+        }
+        .email-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(52, 73, 94, 0.1);
+        }
+        .email-header { 
+            padding: 25px; 
+            border-left: 4px solid #6bb6ff; 
+        }
+        .email-subject { 
+            font-size: 1.3em; 
+            font-weight: bold; 
+            margin-bottom: 12px; 
+            color: #4a90e2; 
+        }
+        .email-meta { 
+            color: #7f8c8d; 
+            font-size: 0.95em; 
+            margin-bottom: 15px; 
+            line-height: 1.6;
+        }
+        .email-summary { 
+            color: #34495e; 
+            margin-bottom: 20px; 
+            padding: 15px; 
+            background: linear-gradient(135deg, #f8f9fb 0%, #e8f4fd 100%); 
+            border-radius: 10px;
+            border: 1px solid #e8f4fd;
+        }
+        .email-actions { 
+            padding: 0 25px 25px 25px; 
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn { 
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
+            color: white; 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        .btn:hover { 
+            transform: translateY(-1px); 
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
+        }
+        .btn-success { 
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #2d3436;
+            box-shadow: 0 2px 8px rgba(253, 203, 110, 0.3);
+        }
+        .btn-success:hover { 
+            box-shadow: 0 4px 16px rgba(253, 203, 110, 0.4);
+        }
+        .btn-danger { 
+            background: linear-gradient(135deg, #ff7675 0%, #e17055 100%);
+            box-shadow: 0 2px 8px rgba(255, 118, 117, 0.3);
+        }
+        .btn-danger:hover { 
+            box-shadow: 0 4px 16px rgba(255, 118, 117, 0.4);
+        }
+        .btn-completed { 
+            background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
+            box-shadow: 0 2px 8px rgba(0, 206, 201, 0.3);
+        }
+        .btn-completed:hover { 
+            box-shadow: 0 4px 16px rgba(0, 206, 201, 0.4);
+        }
+        .priority-high { border-left-color: #ff7675 !important; }
+        .priority-medium { border-left-color: #fdcb6e !important; }
+        .priority-low { border-left-color: #81ecec !important; }
+        .urgency-score { 
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); 
+            color: white; 
+            padding: 6px 12px; 
+            border-radius: 15px; 
+            font-size: 0.8em; 
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(253, 203, 110, 0.3);
+        }
+        .reply-preview { 
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%); 
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 12px; 
+            border-left: 4px solid #fdcb6e;
+            border: 1px solid #ffe082;
+        }
+        .reply-preview h5 { 
+            margin: 0 0 15px 0; 
+            color: #f57c00; 
+            font-size: 1.1em;
+        }
+        .reply-tabs { margin-bottom: 15px; display: flex; gap: 8px; }
+        .tab-btn { 
+            padding: 8px 16px; 
+            border: 2px solid #fdcb6e; 
+            background: white; 
+            cursor: pointer; 
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .tab-btn.active { 
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); 
+            color: white; 
+        }
+        .tab-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(253, 203, 110, 0.3);
+        }
+        .reply-content { display: none; }
+        .reply-content.active { display: block; }
+        .reply-text { 
+            color: #495057; 
+            line-height: 1.7;
+            font-size: 0.95em;
+        }
+        .markdown-text { 
+            width: 100%; 
+            height: 220px; 
+            border: 2px solid #e8f4fd; 
+            border-radius: 12px; 
+            padding: 15px; 
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; 
+            resize: vertical; 
+            font-size: 14px;
+            line-height: 1.6;
+            background: #fafbfc;
+        }
+        .markdown-text:focus { 
+            border-color: #4a90e2; 
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+        
+        /* 🎨 統一されたコピーボタンスタイル */
+        .copy-btn-unified {
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(107, 182, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            user-select: none;
+        }
+        .copy-btn-unified:hover {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.25);
+        }
+        .copy-btn-unified.success {
+            background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
+            animation: successPulse 0.6s ease;
+        }
+        .copy-btn-unified.small {
+            padding: 6px 14px;
+            font-size: 0.8em;
+            border-radius: 18px;
+        }
+        .copy-btn-unified .icon {
+            font-size: 1em;
+            transition: transform 0.3s ease;
+        }
+        .copy-btn-unified:hover .icon {
+            transform: scale(1.1);
+        }
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 6px 24px rgba(0, 206, 201, 0.25);
+            z-index: 1000;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInRight 0.4s ease, fadeOut 0.4s ease 2.6s forwards;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(400px); }
+        }
+        
+        /* テーブルスタイル */
+        .email-table { 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 15px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 20px rgba(52, 73, 94, 0.06);
+            border: 1px solid #e8f4fd;
+        }
+        .email-table table { width: 100%; border-collapse: collapse; }
+        .email-table th { 
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
+            color: white; 
+            padding: 18px; 
+            text-align: left; 
+            font-weight: 600;
+        }
+        .email-table td { 
+            padding: 18px; 
+            border-bottom: 1px solid #e8f4fd; 
+            vertical-align: top;
+        }
+        .email-table tr:hover { background: linear-gradient(135deg, #f8f9fb 0%, #e8f4fd 50%); }
+        .completed-item { 
+            background: linear-gradient(135deg, #f0fffe 0%, #e8f5e8 100%); 
+            opacity: 0.8; 
+        }
+        .category-badge { 
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
+            color: white; 
+            padding: 4px 12px; 
+            border-radius: 15px; 
+            font-size: 0.8em; 
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(74, 144, 226, 0.2);
+        }
+        .completed-badge { 
+            background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%); 
+            color: white; 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 0.75em; 
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0, 206, 201, 0.2);
+        }
+        
+        /* タブ系スタイル */
+        .tabs { display: flex; margin-bottom: 25px; gap: 5px; }
+        .tab { 
+            padding: 15px 30px; 
+            cursor: pointer; 
+            border: 2px solid #e8f4fd; 
+            background: rgba(255, 255, 255, 0.9); 
+            border-radius: 25px 25px 0 0; 
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .tab.active { 
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%); 
+            color: white; 
+            border-color: #4a90e2;
+        }
+        .tab:hover:not(.active) {
+            background: linear-gradient(135deg, #f8f9fb 0%, #e8f4fd 100%);
+            transform: translateY(-2px);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* 優先度バッジ */
+        .priority-badge { 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 0.9em;
+        }
+        .priority-high .priority-badge { background: linear-gradient(135deg, #ff7675 0%, #e17055 100%); }
+        .priority-medium .priority-badge { background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); }
+        .priority-low .priority-badge { background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%); }
+    """
+
+
+def _get_common_script():
+    """共通JavaScript"""
+    return """
+        // 🎯 統一されたコピー機能
+        class UnifiedCopyManager {
+            async copyEmailDraft(emailId) {
+                const textarea = document.querySelector(`#markdown-textarea-${emailId}`);
+                const button = event.target.closest('.copy-btn-unified');
+                
+                if (!textarea) {
+                    this._showNotification('草案が見つかりません', 'error');
+                    return false;
+                }
+
+                const text = textarea.value;
+                if (!text.trim()) {
+                    this._showNotification('コピーする内容がありません', 'warning');
+                    return false;
+                }
+
+                return await this.copyToClipboard(text, button, '📋 メール草案をコピーしました！');
+            }
+
+            async copyToClipboard(text, button, successMessage = 'コピーしました！') {
+                try {
+                    await this._performCopy(text);
+                    this._showButtonSuccess(button);
+                    this._showNotification(successMessage, 'success');
+                    return true;
+                } catch (error) {
+                    this._showNotification('コピーに失敗しました', 'error');
+                    return false;
+                }
+            }
+
+            async _performCopy(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return;
+                }
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = text;
+                tempTextarea.style.position = 'fixed';
+                tempTextarea.style.opacity = '0';
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                const success = document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+                if (!success) throw new Error('Fallback copy failed');
+            }
+
+            _showButtonSuccess(button) {
+                if (!button) return;
+                const originalText = button.innerHTML;
+                button.classList.add('success');
+                button.innerHTML = '<span class="icon">✅</span><span>コピー完了</span>';
+                button.disabled = true;
+                setTimeout(() => {
+                    button.classList.remove('success');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+
+            _showNotification(message, type = 'success') {
+                const existingNotification = document.querySelector('.copy-notification');
+                if (existingNotification) existingNotification.remove();
+
+                const notification = document.createElement('div');
+                notification.className = 'copy-notification';
+                const icons = { success: '✅', error: '❌', warning: '⚠️' };
+                notification.innerHTML = `<span class="icon">${icons[type] || icons.success}</span><span>${message}</span>`;
+                
+                if (type === 'error') {
+                    notification.style.background = 'linear-gradient(135deg, #f44336 0%, #e57373 100%)';
+                } else if (type === 'warning') {
+                    notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
+                }
+
+                document.body.appendChild(notification);
+                setTimeout(() => { if (notification.parentNode) notification.remove(); }, 3000);
+            }
+        }
+
+        const copyManager = new UnifiedCopyManager();
+        
+        // グローバル関数
+        async function copyEmailDraft(emailId) {
+            return await copyManager.copyEmailDraft(emailId);
+        }
+        
+        function showReplyTab(emailId, tabType) {
+            document.querySelectorAll(`#reply-preview-${emailId}, #reply-markdown-${emailId}`).forEach(el => el.classList.remove('active'));
+            document.querySelectorAll(`.tab-btn`).forEach(el => el.classList.remove('active'));
+            document.getElementById(`reply-${tabType}-${emailId}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        async function copyToClipboard(emailId) {
+            return await copyManager.copyEmailDraft(emailId);
+        }
+        
+        async function copyTextToClipboard(text, successMessage) {
+            const button = event ? event.target.closest('.copy-btn-unified') : null;
+            return await copyManager.copyToClipboard(text, button, successMessage);
+        }
+        
+        function showCopySuccess(message) {
+            copyManager._showNotification(message, 'success');
+        }
+        
+        async function markCompleted(emailId) {
+            try {
+                const response = await fetch(`/emails/${emailId}/complete`, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) { location.reload(); }
+                else { alert('エラー: ' + result.error); }
+            } catch (error) { alert('エラーが発生しました: ' + error.message); }
+        }
+        
+        async function deleteEmail(emailId) {
+            if (confirm('このメールを削除しますか？')) {
+                try {
+                    const response = await fetch(`/emails/${emailId}/delete`, { method: 'DELETE' });
+                    const result = await response.json();
+                    if (result.success) { location.reload(); }
+                    else { alert('エラー: ' + result.error); }
+                } catch (error) { alert('エラーが発生しました: ' + error.message); }
+            }
+        }
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+    """
+
+
 def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -> str:
-    """優先度別表示HTMLテンプレート"""
+    """優先度別表示HTMLテンプレート（統一UI）"""
     return f"""
     <!DOCTYPE html>
     <html>
@@ -988,392 +1502,17 @@ def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                margin: 0; 
-                padding: 20px; 
-                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
-            }}
-            .container {{ max-width: 1000px; margin: 0 auto; }}
-            .header {{ 
-                background: white; 
-                padding: 20px; 
-                border-radius: 10px; 
-                margin-bottom: 20px; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
-                border: 2px solid #ffd54f;
-            }}
-            .back-btn {{ 
-                background: #1976d2; 
-                color: white; 
-                padding: 8px 16px; 
-                border: none; 
-                border-radius: 20px; 
-                text-decoration: none; 
-                margin-right: 10px;
-                border: 2px solid #ffd54f;
-            }}
-            .priority-badge {{ 
-                padding: 8px 16px; 
-                border-radius: 20px; 
-                color: white; 
-                font-weight: bold; 
-            }}
-            .priority-high .priority-badge {{ background: #e74c3c; }}
-            .priority-medium .priority-badge {{ background: #ffa726; }}
-            .priority-low .priority-badge {{ background: #66bb6a; }}
-            .email-card {{ 
-                background: white; 
-                margin: 15px 0; 
-                border-radius: 10px; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1); 
-                overflow: hidden;
-                border: 1px solid #e3f2fd;
-            }}
-            .email-header {{ 
-                padding: 20px; 
-                border-left: 4px solid #1976d2; 
-            }}
-            .email-subject {{ 
-                font-size: 1.2em; 
-                font-weight: bold; 
-                margin-bottom: 10px; 
-                color: #1565c0; 
-            }}
-            .email-meta {{ 
-                color: #7f8c8d; 
-                font-size: 0.9em; 
-                margin-bottom: 15px; 
-            }}
-            .email-summary {{ 
-                color: #34495e; 
-                margin-bottom: 15px; 
-                padding: 10px; 
-                background: #e3f2fd; 
-                border-radius: 5px; 
-            }}
-            .email-actions {{ 
-                padding: 0 20px 20px 20px; 
-            }}
-            .btn {{ 
-                padding: 8px 16px; 
-                margin: 5px; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer; 
-                text-decoration: none; 
-                display: inline-block; 
-            }}
-            .btn-primary {{ background: #1976d2; color: white; }}
-            .btn-success {{ background: #ffa726; color: white; }}
-            .btn-danger {{ background: #e74c3c; color: white; }}
-            .priority-high {{ border-left-color: #e74c3c !important; }}
-            .priority-medium {{ border-left-color: #ffa726 !important; }}
-            .priority-low {{ border-left-color: #66bb6a !important; }}
-            .urgency-score {{ 
-                background: #ffa726; 
-                color: white; 
-                padding: 4px 8px; 
-                border-radius: 12px; 
-                font-size: 0.8em; 
-            }}
-            .reply-preview {{ 
-                background: #fff8e1; 
-                padding: 15px; 
-                margin: 10px 0; 
-                border-radius: 5px; 
-                border-left: 3px solid #ffa726; 
-            }}
-            .reply-preview h5 {{ 
-                margin: 0 0 10px 0; 
-                color: #ffa726; 
-            }}
-            .reply-tabs {{ margin-bottom: 10px; }}
-            .tab-btn {{ 
-                padding: 5px 12px; 
-                border: 1px solid #ffa726; 
-                background: white; 
-                cursor: pointer; 
-                margin-right: 5px; 
-                border-radius: 3px; 
-            }}
-            .tab-btn.active {{ 
-                background: #ffa726; 
-                color: white; 
-            }}
-            .reply-content {{ display: none; }}
-            .reply-content.active {{ display: block; }}
-            .reply-text {{ 
-                font-style: italic; 
-                color: #495057; 
-                line-height: 1.6; 
-            }}
-            .markdown-text {{ 
-                width: 100%; 
-                height: 200px; 
-                border: 2px solid #e3f2fd; 
-                border-radius: 8px; 
-                padding: 15px; 
-                font-family: 'Courier New', monospace; 
-                resize: vertical; 
-                font-size: 14px;
-                line-height: 1.5;
-            }}
-            .markdown-text:focus {{ 
-                border-color: #1976d2; 
-                outline: none;
-                box-shadow: 0 0 5px rgba(25, 118, 210, 0.3);
-            }}
-            .copy-btn-quick {{ 
-                background: #1976d2; 
-                color: white; 
-                border: none; 
-                padding: 6px 15px; 
-                border-radius: 20px; 
-                cursor: pointer; 
-                font-size: 0.9em;
-                font-weight: bold;
-                transition: all 0.3s ease;
-                border: 2px solid #fff;
-            }}
-            .copy-btn-quick:hover {{ 
-                background: #1565c0; 
-                transform: translateY(-1px);
-                box-shadow: 0 2px 8px rgba(25, 118, 210, 0.4);
-            }}
-            .copy-success-alert {{
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #4caf50;
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                z-index: 1000;
-                font-weight: bold;
-            }}
-            
-            /* 🎨 統一されたコピーボタンスタイル */
-            .copy-btn-unified {{
-                background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 25px;
-                cursor: pointer;
-                font-size: 0.9em;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                text-decoration: none;
-                user-select: none;
-            }}
-            .copy-btn-unified:hover {{
-                background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
-            }}
-            .copy-btn-unified.success {{
-                background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-                animation: successPulse 0.6s ease;
-            }}
-            .copy-btn-unified.small {{
-                padding: 6px 14px;
-                font-size: 0.8em;
-                border-radius: 18px;
-            }}
-            .copy-btn-unified .icon {{
-                font-size: 1em;
-                transition: transform 0.3s ease;
-            }}
-            .copy-btn-unified:hover .icon {{
-                transform: scale(1.1);
-            }}
-            @keyframes successPulse {{
-                0% {{ transform: scale(1); }}
-                50% {{ transform: scale(1.05); }}
-                100% {{ transform: scale(1); }}
-            }}
-            .copy-notification {{
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-                color: white;
-                padding: 16px 24px;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
-                z-index: 1000;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                animation: slideInRight 0.4s ease, fadeOut 0.4s ease 2.6s forwards;
-            }}
-            @keyframes slideInRight {{
-                from {{ transform: translateX(400px); opacity: 0; }}
-                to {{ transform: translateX(0); opacity: 1; }}
-            }}
-            @keyframes fadeOut {{
-                from {{ opacity: 1; transform: translateX(0); }}
-                to {{ opacity: 0; transform: translateX(400px); }}
-            }}
+            {_get_common_styles()}
         </style>
         <script>
-            // 🎯 統一されたコピー機能
-            class UnifiedCopyManager {{
-                async copyEmailDraft(emailId) {{
-                    const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
-                    const button = event.target.closest('.copy-btn-unified');
-                    
-                    if (!textarea) {{
-                        this._showNotification('草案が見つかりません', 'error');
-                        return false;
-                    }}
-
-                    const text = textarea.value;
-                    if (!text.trim()) {{
-                        this._showNotification('コピーする内容がありません', 'warning');
-                        return false;
-                    }}
-
-                    return await this.copyToClipboard(text, button, '📋 メール草案をコピーしました！');
-                }}
-
-                async copyToClipboard(text, button, successMessage = 'コピーしました！') {{
-                    // ボタンローディング開始
-                    const originalHtml = button ? button.innerHTML : '';
-                    if (button) {{
-                        button.innerHTML = '<span class="loading-spinner"></span>コピー中...';
-                        button.disabled = true;
-                        button.classList.add('loading');
-                    }}
-                    
-                    try {{
-                        await this._performCopy(text);
-                        this._showButtonSuccess(button, originalHtml);
-                        this._showNotification(successMessage, 'success');
-                        return true;
-                    }} catch (error) {{
-                        if (button) {{
-                            button.innerHTML = originalHtml;
-                            button.disabled = false;
-                            button.classList.remove('loading');
-                        }}
-                        this._showNotification('コピーに失敗しました', 'error');
-                        return false;
-                    }}
-                }}
-
-                async _performCopy(text) {{
-                    if (navigator.clipboard && navigator.clipboard.writeText) {{
-                        await navigator.clipboard.writeText(text);
-                        return;
-                    }}
-                    const tempTextarea = document.createElement('textarea');
-                    tempTextarea.value = text;
-                    tempTextarea.style.position = 'fixed';
-                    tempTextarea.style.opacity = '0';
-                    document.body.appendChild(tempTextarea);
-                    tempTextarea.select();
-                    const success = document.execCommand('copy');
-                    document.body.removeChild(tempTextarea);
-                    if (!success) throw new Error('Fallback copy failed');
-                }}
-
-                _showButtonSuccess(button, originalHtml) {{
-                    if (!button) return;
-                    
-                    button.classList.remove('loading');
-                    button.classList.add('success');
-                    button.innerHTML = '<span class="icon">✅</span><span>コピー完了</span>';
-                    button.disabled = true;
-                    
-                    setTimeout(() => {{
-                        button.classList.remove('success');
-                        button.innerHTML = originalHtml;
-                        button.disabled = false;
-                    }}, 2000);
-                }}
-
-                _showNotification(message, type = 'success') {{
-                    const existingNotification = document.querySelector('.copy-notification');
-                    if (existingNotification) existingNotification.remove();
-
-                    const notification = document.createElement('div');
-                    notification.className = 'copy-notification';
-                    const icons = {{ success: '✅', error: '❌', warning: '⚠️' }};
-                    notification.innerHTML = `<span class="icon">${{icons[type] || icons.success}}</span><span>${{message}}</span>`;
-                    
-                    if (type === 'error') {{
-                        notification.style.background = 'linear-gradient(135deg, #f44336 0%, #e57373 100%)';
-                    }} else if (type === 'warning') {{
-                        notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
-                    }}
-
-                    document.body.appendChild(notification);
-                    setTimeout(() => {{ if (notification.parentNode) notification.remove(); }}, 3000);
-                }}
-            }}
-
-            const copyManager = new UnifiedCopyManager();
-            
-            // グローバル関数
-            async function copyEmailDraft(emailId) {{
-                return await copyManager.copyEmailDraft(emailId);
-            }}
-            
-            function showReplyTab(emailId, tabType) {{
-                document.querySelectorAll(`#reply-preview-${{emailId}}, #reply-markdown-${{emailId}}`).forEach(el => el.classList.remove('active'));
-                document.querySelectorAll(`.tab-btn`).forEach(el => el.classList.remove('active'));
-                document.getElementById(`reply-${{tabType}}-${{emailId}}`).classList.add('active');
-                event.target.classList.add('active');
-            }}
-            
-            async function copyToClipboard(emailId) {{
-                return await copyManager.copyEmailDraft(emailId);
-            }}
-            
-            async function copyTextToClipboard(text, successMessage) {{
-                const button = event ? event.target.closest('.copy-btn-unified') : null;
-                return await copyManager.copyToClipboard(text, button, successMessage);
-            }}
-            
-            function showCopySuccess(message) {{
-                copyManager._showNotification(message, 'success');
-            }}
-            
-            async function markCompleted(emailId) {{
-                try {{
-                    const response = await fetch(`/emails/${{emailId}}/complete`, {{ method: 'POST' }});
-                    const result = await response.json();
-                    if (result.success) {{ location.reload(); }}
-                    else {{ alert('エラー: ' + result.error); }}
-                }} catch (error) {{ alert('エラーが発生しました: ' + error.message); }}
-            }}
-            
-            async function deleteEmail(emailId) {{
-                if (confirm('このメールを削除しますか？')) {{
-                    try {{
-                        const response = await fetch(`/emails/${{emailId}}/delete`, {{ method: 'DELETE' }});
-                        const result = await response.json();
-                        if (result.success) {{ location.reload(); }}
-                        else {{ alert('エラー: ' + result.error); }}
-                    }} catch (error) {{ alert('エラーが発生しました: ' + error.message); }}
-                }}
-            }}
+            {_get_common_script()}
         </script>
     </head>
     <body>
         <div class="container priority-{priority_level}">
-            <div class="header">
-                <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2 style="color: #1565c0;">
+            <div class="header page-header">
+                <a href="/" class="back-btn">←</a>
+                <h2>
                     <span class="priority-badge">{priority_jp}優先度</span>
                     メール ({len(emails)}件)
                 </h2>
@@ -1387,7 +1526,7 @@ def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -
 
 
 def _get_completed_html_template(emails) -> str:
-    """完了済みメール表示HTMLテンプレート"""
+    """完了済みメール表示HTMLテンプレート（統一UI）"""
     return f"""
     <!DOCTYPE html>
     <html>
@@ -1396,98 +1535,17 @@ def _get_completed_html_template(emails) -> str:
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                margin: 0; 
-                padding: 20px; 
-                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
-            }}
-            .container {{ max-width: 1200px; margin: 0 auto; }}
-            .header {{ 
-                background: white; 
-                padding: 20px; 
-                border-radius: 10px; 
-                margin-bottom: 20px; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
-                border: 2px solid #ffd54f;
-            }}
-            .back-btn {{ 
-                background: #1976d2; 
-                color: white; 
-                padding: 8px 16px; 
-                border: none; 
-                border-radius: 20px; 
-                text-decoration: none; 
-                margin-right: 10px;
-                border: 2px solid #ffd54f;
-            }}
-            .email-table {{ 
-                background: white; 
-                border-radius: 10px; 
-                overflow: hidden; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
-                border: 1px solid #e3f2fd;
-            }}
-            .email-table table {{ width: 100%; border-collapse: collapse; }}
-            .email-table th {{ 
-                background: #66bb6a; 
-                color: white; 
-                padding: 15px; 
-                text-align: left; 
-            }}
-            .email-table td {{ 
-                padding: 15px; 
-                border-bottom: 1px solid #e3f2fd; 
-            }}
-            .email-table tr:hover {{ background: #f8f9fa; }}
-            .completed-item {{ 
-                background: #e8f5e8; 
-                opacity: 0.8; 
-            }}
-            .btn {{ 
-                padding: 5px 10px; 
-                margin: 2px; 
-                border: none; 
-                border-radius: 3px; 
-                cursor: pointer; 
-                text-decoration: none; 
-                font-size: 0.8em; 
-            }}
-            .btn-primary {{ background: #1976d2; color: white; }}
-            .btn-success {{ background: #66bb6a; color: white; }}
-            /* 完了済みボタン用の緑色スタイル */
-            .btn-completed {{ 
-                background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%);
-                color: white;
-                font-weight: 600;
-                box-shadow: 0 2px 8px rgba(0, 206, 201, 0.3);
-                opacity: 0.8;
-            }}
-            .btn-completed:hover {{ 
-                box-shadow: 0 4px 16px rgba(0, 206, 201, 0.4);
-                opacity: 1;
-            }}
-            .category-badge {{ 
-                background: #66bb6a; 
-                color: white; 
-                padding: 3px 8px; 
-                border-radius: 10px; 
-                font-size: 0.7em; 
-            }}
-            .completed-badge {{ 
-                background: #4caf50; 
-                color: white; 
-                padding: 2px 6px; 
-                border-radius: 8px; 
-                font-size: 0.7em; 
-            }}
+            {_get_common_styles()}
         </style>
+        <script>
+            {_get_common_script()}
+        </script>
     </head>
     <body>
         <div class="container">
-            <div class="header">
-                <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2 style="color: #1565c0;">✅ 完了済みメール ({len(emails)}件)</h2>
+            <div class="header page-header">
+                <a href="/" class="back-btn">←</a>
+                <h2>✅ 完了済みメール ({len(emails)}件)</h2>
             </div>
             
             <div class="email-table">
@@ -1513,7 +1571,7 @@ def _get_completed_html_template(emails) -> str:
 
 
 def _get_category_html_template(category_name: str, pending_emails, completed_emails) -> str:
-    """カテゴリ別メール表示HTMLテンプレート"""
+    """カテゴリ別メール表示HTMLテンプレート（統一UI）"""
     return f"""
     <!DOCTYPE html>
     <html>
@@ -1522,289 +1580,17 @@ def _get_category_html_template(category_name: str, pending_emails, completed_em
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                margin: 0; 
-                padding: 20px; 
-                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
-            }}
-            .container {{ max-width: 1000px; margin: 0 auto; }}
-            .header {{ 
-                background: white; 
-                padding: 20px; 
-                border-radius: 10px; 
-                margin-bottom: 20px; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
-                border: 2px solid #ffd54f;
-            }}
-            .back-btn {{ 
-                background: #1976d2; 
-                color: white; 
-                padding: 8px 16px; 
-                border: none; 
-                border-radius: 20px; 
-                text-decoration: none; 
-                margin-right: 10px;
-                border: 2px solid #ffd54f;
-            }}
-            .tabs {{ display: flex; margin-bottom: 20px; }}
-            .tab {{ 
-                padding: 12px 24px; 
-                cursor: pointer; 
-                border: 1px solid #ddd; 
-                background: #f8f9fa; 
-                margin-right: 5px; 
-                border-radius: 5px 5px 0 0; 
-            }}
-            .tab.active {{ 
-                background: #1976d2; 
-                color: white; 
-            }}
-            .tab-content {{ display: none; }}
-            .tab-content.active {{ display: block; }}
-            .email-card {{ 
-                background: white; 
-                margin: 15px 0; 
-                border-radius: 10px; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1); 
-                overflow: hidden;
-                border: 1px solid #e3f2fd;
-            }}
-            .email-header {{ 
-                padding: 20px; 
-                border-left: 4px solid #1976d2; 
-            }}
-            .email-subject {{ 
-                font-size: 1.2em; 
-                font-weight: bold; 
-                margin-bottom: 10px; 
-                color: #1565c0; 
-            }}
-            .email-meta {{ 
-                color: #7f8c8d; 
-                font-size: 0.9em; 
-                margin-bottom: 15px; 
-            }}
-            .email-summary {{ 
-                color: #34495e; 
-                margin-bottom: 15px; 
-                padding: 10px; 
-                background: #e3f2fd; 
-                border-radius: 5px; 
-            }}
-            .email-actions {{ 
-                padding: 0 20px 20px 20px; 
-            }}
-            .btn {{ 
-                padding: 8px 16px; 
-                margin: 5px; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer; 
-                text-decoration: none; 
-                display: inline-block; 
-            }}
-            .btn-primary {{ background: #1976d2; color: white; }}
-            .btn-success {{ background: #ffa726; color: white; }}
-            .btn-danger {{ background: #e74c3c; color: white; }}
-            .priority-high {{ border-left-color: #e74c3c !important; }}
-            .priority-medium {{ border-left-color: #ffa726 !important; }}
-            .priority-low {{ border-left-color: #66bb6a !important; }}
-            .urgency-score {{ 
-                background: #ffa726; 
-                color: white; 
-                padding: 4px 8px; 
-                border-radius: 12px; 
-                font-size: 0.8em; 
-            }}
-            .reply-preview {{ 
-                background: #fff8e1; 
-                padding: 15px; 
-                margin: 10px 0; 
-                border-radius: 5px; 
-                border-left: 3px solid #ffa726; 
-            }}
-            .reply-preview h5 {{ 
-                margin: 0 0 10px 0; 
-                color: #ffa726; 
-            }}
-            .reply-tabs {{ margin-bottom: 10px; }}
-            .tab-btn {{ 
-                padding: 5px 12px; 
-                border: 1px solid #ffa726; 
-                background: white; 
-                cursor: pointer; 
-                margin-right: 5px; 
-                border-radius: 3px; 
-            }}
-            .tab-btn.active {{ 
-                background: #ffa726; 
-                color: white; 
-            }}
-            .reply-content {{ display: none; }}
-            .reply-content.active {{ display: block; }}
-            .reply-text {{ 
-                font-style: italic; 
-                color: #495057; 
-                line-height: 1.6; 
-            }}
-            .markdown-text {{ 
-                width: 100%; 
-                height: 200px; 
-                border: 1px solid #ddd; 
-                border-radius: 5px; 
-                padding: 10px; 
-                font-family: monospace; 
-                resize: vertical; 
-            }}
-            .copy-btn {{ 
-                background: #66bb6a; 
-                color: white; 
-                border: none; 
-                padding: 5px 10px; 
-                border-radius: 3px; 
-                cursor: pointer; 
-                margin-top: 5px; 
-            }}
-            .copy-btn:hover {{ background: #4caf50; }}
-            .completed-item {{ 
-                opacity: 0.7; 
-                background: #e8f5e8; 
-            }}
+            {_get_common_styles()}
         </style>
         <script>
-            // 🎯 統一されたコピー機能
-            class UnifiedCopyManager {{
-                async copyEmailDraft(emailId) {{
-                    const textarea = document.querySelector(`#markdown-textarea-${{emailId}}`);
-                    const button = event.target.closest('.copy-btn-unified');
-                    
-                    if (!textarea) {{
-                        this._showNotification('草案が見つかりません', 'error');
-                        return false;
-                    }}
-
-                    const text = textarea.value;
-                    if (!text.trim()) {{
-                        this._showNotification('コピーする内容がありません', 'warning');
-                        return false;
-                    }}
-
-                    return await this.copyToClipboard(text, button, '📋 メール草案をコピーしました！');
-                }}
-
-                async copyToClipboard(text, button, successMessage = 'コピーしました！') {{
-                    try {{
-                        await this._performCopy(text);
-                        this._showButtonSuccess(button);
-                        this._showNotification(successMessage, 'success');
-                        return true;
-                    }} catch (error) {{
-                        this._showNotification('コピーに失敗しました', 'error');
-                        return false;
-                    }}
-                }}
-
-                async _performCopy(text) {{
-                    if (navigator.clipboard && navigator.clipboard.writeText) {{
-                        await navigator.clipboard.writeText(text);
-                        return;
-                    }}
-                    const tempTextarea = document.createElement('textarea');
-                    tempTextarea.value = text;
-                    tempTextarea.style.position = 'fixed';
-                    tempTextarea.style.opacity = '0';
-                    document.body.appendChild(tempTextarea);
-                    tempTextarea.select();
-                    const success = document.execCommand('copy');
-                    document.body.removeChild(tempTextarea);
-                    if (!success) throw new Error('Fallback copy failed');
-                }}
-
-                _showButtonSuccess(button) {{
-                    if (!button) return;
-                    const originalText = button.innerHTML;
-                    button.classList.add('success');
-                    button.innerHTML = '<span class="icon">✅</span><span>コピー完了</span>';
-                    button.disabled = true;
-                    setTimeout(() => {{
-                        button.classList.remove('success');
-                        button.innerHTML = originalText;
-                        button.disabled = false;
-                    }}, 2000);
-                }}
-
-                _showNotification(message, type = 'success') {{
-                    const existingNotification = document.querySelector('.copy-notification');
-                    if (existingNotification) existingNotification.remove();
-
-                    const notification = document.createElement('div');
-                    notification.className = 'copy-notification';
-                    const icons = {{ success: '✅', error: '❌', warning: '⚠️' }};
-                    notification.innerHTML = `<span class="icon">${{icons[type] || icons.success}}</span><span>${{message}}</span>`;
-                    
-                    if (type === 'error') {{
-                        notification.style.background = 'linear-gradient(135deg, #f44336 0%, #e57373 100%)';
-                    }} else if (type === 'warning') {{
-                        notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
-                    }}
-
-                    document.body.appendChild(notification);
-                    setTimeout(() => {{ if (notification.parentNode) notification.remove(); }}, 3000);
-                }}
-            }}
-
-            const copyManager = new UnifiedCopyManager();
-            
-            // グローバル関数
-            async function copyEmailDraft(emailId) {{
-                return await copyManager.copyEmailDraft(emailId);
-            }}
-            
-            function showTab(tabName) {{
-                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-                document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-                document.getElementById(tabName).classList.add('active');
-                document.querySelector(`[onclick="showTab('${{tabName}}')"]`).classList.add('active');
-            }}
-            
-            function showReplyTab(emailId, tabType) {{
-                document.querySelectorAll(`#reply-preview-${{emailId}}, #reply-markdown-${{emailId}}`).forEach(el => el.classList.remove('active'));
-                document.querySelectorAll(`.tab-btn`).forEach(el => el.classList.remove('active'));
-                document.getElementById(`reply-${{tabType}}-${{emailId}}`).classList.add('active');
-                event.target.classList.add('active');
-            }}
-            
-            async function copyToClipboard(emailId) {{
-                return await copyManager.copyEmailDraft(emailId);
-            }}
-            
-            async function markCompleted(emailId) {{
-                try {{
-                    const response = await fetch(`/emails/${{emailId}}/complete`, {{ method: 'POST' }});
-                    const result = await response.json();
-                    if (result.success) {{ location.reload(); }}
-                    else {{ alert('エラー: ' + result.error); }}
-                }} catch (error) {{ alert('エラーが発生しました: ' + error.message); }}
-            }}
-            
-            async function deleteEmail(emailId) {{
-                if (confirm('このメールを削除しますか？')) {{
-                    try {{
-                        const response = await fetch(`/emails/${{emailId}}/delete`, {{ method: 'DELETE' }});
-                        const result = await response.json();
-                        if (result.success) {{ location.reload(); }}
-                        else {{ alert('エラー: ' + result.error); }}
-                    }} catch (error) {{ alert('エラーが発生しました: ' + error.message); }}
-                }}
-            }}
+            {_get_common_script()}
         </script>
     </head>
     <body>
         <div class="container">
-            <div class="header">
-                <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2 style="color: #1565c0;">{category_name}</h2>
+            <div class="header page-header">
+                <a href="/" class="back-btn">←</a>
+                <h2>{category_name}</h2>
             </div>
             
             <div class="tabs">
@@ -1826,7 +1612,7 @@ def _get_category_html_template(category_name: str, pending_emails, completed_em
 
 
 def _get_all_emails_html_template(emails) -> str:
-    """すべてのメール表示HTMLテンプレート"""
+    """すべてのメール表示HTMLテンプレート（統一UI）"""
     return f"""
     <!DOCTYPE html>
     <html>
@@ -1835,79 +1621,17 @@ def _get_all_emails_html_template(emails) -> str:
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            body {{ 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                margin: 0; 
-                padding: 20px; 
-                background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #fff9c4 100%);
-            }}
-            .container {{ max-width: 1200px; margin: 0 auto; }}
-            .header {{ 
-                background: white; 
-                padding: 20px; 
-                border-radius: 10px; 
-                margin-bottom: 20px; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
-                border: 2px solid #ffd54f;
-            }}
-            .back-btn {{ 
-                background: #1976d2; 
-                color: white; 
-                padding: 8px 16px; 
-                border: none; 
-                border-radius: 20px; 
-                text-decoration: none; 
-                margin-right: 10px;
-                border: 2px solid #ffd54f;
-            }}
-            .email-table {{ 
-                background: white; 
-                border-radius: 10px; 
-                overflow: hidden; 
-                box-shadow: 0 4px 20px rgba(21, 101, 192, 0.1);
-                border: 1px solid #e3f2fd;
-            }}
-            .email-table table {{ width: 100%; border-collapse: collapse; }}
-            .email-table th {{ 
-                background: #1976d2; 
-                color: white; 
-                padding: 15px; 
-                text-align: left; 
-            }}
-            .email-table td {{ 
-                padding: 15px; 
-                border-bottom: 1px solid #e3f2fd; 
-            }}
-            .email-table tr:hover {{ background: #f8f9fa; }}
-            .priority-high {{ background: #ffebee; }}
-            .priority-medium {{ background: #fff8e1; }}
-            .priority-low {{ background: #e8f5e8; }}
-            .btn {{ 
-                padding: 5px 10px; 
-                margin: 2px; 
-                border: none; 
-                border-radius: 3px; 
-                cursor: pointer; 
-                text-decoration: none; 
-                font-size: 0.8em; 
-            }}
-            .btn-primary {{ background: #1976d2; color: white; }}
-            .btn-success {{ background: #ffa726; color: white; }}
-            .btn-danger {{ background: #e74c3c; color: white; }}
-            .category-badge {{ 
-                background: #1976d2; 
-                color: white; 
-                padding: 3px 8px; 
-                border-radius: 10px; 
-                font-size: 0.7em; 
-            }}
+            {_get_common_styles()}
         </style>
+        <script>
+            {_get_common_script()}
+        </script>
     </head>
     <body>
         <div class="container">
-            <div class="header">
-                <a href="/" class="back-btn">← ダッシュボード</a>
-                <h2 style="color: #1565c0;">📋 すべてのメール ({len(emails)}件)</h2>
+            <div class="header page-header">
+                <a href="/" class="back-btn">←</a>
+                <h2>📋 すべてのメール ({len(emails)}件)</h2>
             </div>
             
             <div class="email-table">
