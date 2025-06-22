@@ -315,8 +315,8 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     position: fixed;
                     bottom: 30px;
                     right: 30px;
-                    width: 60px;
-                    height: 60px;
+                    width: 80px;
+                    height: 80px;
                     background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
                     border: none;
                     border-radius: 50%;
@@ -338,8 +338,8 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                     position: fixed;
                     bottom: 100px;
                     right: 30px;
-                    width: 350px;
-                    height: 500px;
+                    width: 500px;
+                    height: 700px;
                     background: rgba(255, 255, 255, 0.98);
                     border-radius: 20px;
                     box-shadow: 0 10px 40px rgba(52, 73, 94, 0.15);
