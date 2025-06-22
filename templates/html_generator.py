@@ -27,19 +27,18 @@ def generate_email_cards(emails: List[Dict[str, Any]]) -> str:
             # HTMLタグを閉じる
             reply_html = reply_html.replace('<h4>', '<h4>').replace('<h3>', '<h3>').replace('<h2>', '<h2>')
             
+            # シンプルな表示：文章 + コピーボタン
             reply_section = f'''<div class="reply-preview">
                 <h5>🤖 AI返信草案</h5>
-                <div class="reply-tabs">
-                    <button class="tab-btn active" onclick="showReplyTab('{email_id}', 'preview')">👁️ プレビュー</button>
-                    <button class="tab-btn" onclick="showReplyTab('{email_id}', 'markdown')">📝 編集可能</button>
-                    <button class="copy-actions copy-btn-quick" onclick="copyToClipboard('{email_id}')">📋 ワンクリックコピー</button>
+                <div class="reply-text">{reply_html}</div>
+                <div style="margin-top: 15px;">
+                    <button class="copy-btn-unified" onclick="copyEmailDraft('{email_id}')">
+                        <span class="icon">📋</span>
+                        <span>返信草案をコピー</span>
+                    </button>
                 </div>
-                <div id="reply-preview-{email_id}" class="reply-content active">
-                    <div class="reply-text">{reply_html}</div>
-                </div>
-                <div id="reply-markdown-{email_id}" class="reply-content">
-                    <textarea id="markdown-textarea-{email_id}" class="markdown-text">{reply_draft}</textarea>
-                </div>
+                <!-- 隠しテキストエリア（コピー用） -->
+                <textarea id="markdown-textarea-{email_id}" style="display: none;">{reply_draft}</textarea>
             </div>'''
         
         sender = email.get("sender", "Unknown")
