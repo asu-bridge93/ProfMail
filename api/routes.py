@@ -1,5 +1,5 @@
 """
-FastAPI ルート定義 (統一UI版)
+FastAPI ルート定義 (統一UI版 + チャットボット)
 """
 import sqlite3
 from datetime import datetime
@@ -308,6 +308,181 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                 @keyframes fadeOut {{
                     from {{ opacity: 1; transform: translateX(0); }}
                     to {{ opacity: 0; transform: translateX(400px); }}
+                }}
+                
+                /* 🤖 チャットボット関連スタイル */
+                .chat-float-btn {{
+                    position: fixed;
+                    bottom: 30px;
+                    right: 30px;
+                    width: 60px;
+                    height: 60px;
+                    background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+                    border: none;
+                    border-radius: 50%;
+                    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.3);
+                    cursor: pointer;
+                    z-index: 1000;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 24px;
+                }}
+                .chat-float-btn:hover {{
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 25px rgba(74, 144, 226, 0.4);
+                }}
+                .chat-popup {{
+                    position: fixed;
+                    bottom: 100px;
+                    right: 30px;
+                    width: 350px;
+                    height: 500px;
+                    background: rgba(255, 255, 255, 0.98);
+                    border-radius: 20px;
+                    box-shadow: 0 10px 40px rgba(52, 73, 94, 0.15);
+                    border: 1px solid #e8f4fd;
+                    z-index: 999;
+                    display: none;
+                    flex-direction: column;
+                    overflow: hidden;
+                    animation: slideInUp 0.3s ease;
+                }}
+                .chat-popup.open {{
+                    display: flex;
+                }}
+                @keyframes slideInUp {{
+                    from {{ opacity: 0; transform: translateY(20px); }}
+                    to {{ opacity: 1; transform: translateY(0); }}
+                }}
+                .chat-header {{
+                    background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+                    color: white;
+                    padding: 15px 20px;
+                    font-weight: 600;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }}
+                .chat-close {{
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 20px;
+                    cursor: pointer;
+                    opacity: 0.8;
+                    transition: opacity 0.3s;
+                }}
+                .chat-close:hover {{
+                    opacity: 1;
+                }}
+                .chat-messages {{
+                    flex: 1;
+                    padding: 20px;
+                    overflow-y: auto;
+                    background: linear-gradient(135deg, #fdfcf5 0%, #f8f9fb 100%);
+                }}
+                .chat-message {{
+                    margin-bottom: 15px;
+                    animation: fadeInMessage 0.3s ease;
+                }}
+                @keyframes fadeInMessage {{
+                    from {{ opacity: 0; transform: translateY(10px); }}
+                    to {{ opacity: 1; transform: translateY(0); }}
+                }}
+                .chat-message.user {{
+                    text-align: right;
+                }}
+                .chat-message.assistant {{
+                    text-align: left;
+                }}
+                .chat-bubble {{
+                    display: inline-block;
+                    padding: 12px 16px;
+                    border-radius: 18px;
+                    max-width: 85%;
+                    line-height: 1.4;
+                    word-wrap: break-word;
+                }}
+                .chat-bubble.user {{
+                    background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+                    color: white;
+                }}
+                .chat-bubble.assistant {{
+                    background: rgba(255, 255, 255, 0.9);
+                    color: #2c3e50;
+                    border: 1px solid #e8f4fd;
+                    box-shadow: 0 2px 8px rgba(52, 73, 94, 0.05);
+                }}
+                .chat-input-container {{
+                    padding: 15px 20px;
+                    background: rgba(255, 255, 255, 0.95);
+                    border-top: 1px solid #e8f4fd;
+                    display: flex;
+                    gap: 10px;
+                }}
+                .chat-input {{
+                    flex: 1;
+                    padding: 12px 16px;
+                    border: 2px solid #e8f4fd;
+                    border-radius: 25px;
+                    outline: none;
+                    font-size: 14px;
+                    transition: border-color 0.3s;
+                }}
+                .chat-input:focus {{
+                    border-color: #4a90e2;
+                }}
+                .chat-send-btn {{
+                    background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 50%;
+                    width: 45px;
+                    height: 45px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+                }}
+                .chat-send-btn:hover {{
+                    transform: scale(1.05);
+                    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+                }}
+                .chat-send-btn:disabled {{
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    transform: none;
+                }}
+                .chat-typing {{
+                    display: none;
+                    text-align: left;
+                    margin-bottom: 15px;
+                }}
+                .chat-typing.show {{
+                    display: block;
+                }}
+                .typing-bubble {{
+                    display: inline-block;
+                    padding: 12px 16px;
+                    border-radius: 18px;
+                    background: rgba(255, 255, 255, 0.9);
+                    border: 1px solid #e8f4fd;
+                    color: #7f8c8d;
+                    font-style: italic;
+                }}
+                .typing-dots {{
+                    display: inline-block;
+                    animation: typingDots 1.5s infinite;
+                }}
+                @keyframes typingDots {{
+                    0%, 60%, 100% {{ opacity: 0.4; }}
+                    30% {{ opacity: 1; }}
                 }}
             </style>
             <script>
@@ -644,6 +819,151 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                 function viewCategory(category) {{
                     window.location.href = `/category/${{encodeURIComponent(category)}}`;
                 }}
+
+                // 🤖 チャットボット機能
+                class ProfessorChatBot {{
+                    constructor() {{
+                        this.isOpen = false;
+                        this.messages = [];
+                        this.init();
+                    }}
+                    
+                    init() {{
+                        // 初回メッセージ
+                        this.messages = [{{
+                            type: 'assistant',
+                            content: '🎓 こんにちは！ProfMail AIアシスタントです。\\n\\n今日のメール状況を確認したり、特定のメールを検索したりできます。\\n\\n例：「今日やるべきことは？」「高優先度のメールを見せて」「論文査読のメールは？」',
+                            timestamp: new Date()
+                        }}];
+                    }}
+                    
+                    toggle() {{
+                        const popup = document.getElementById('chat-popup');
+                        if (this.isOpen) {{
+                            popup.classList.remove('open');
+                            this.isOpen = false;
+                        }} else {{
+                            popup.classList.add('open');
+                            this.isOpen = true;
+                            this.renderMessages();
+                            document.getElementById('chat-input').focus();
+                        }}
+                    }}
+                    
+                    async sendMessage() {{
+                        const input = document.getElementById('chat-input');
+                        const message = input.value.trim();
+                        
+                        if (!message) return;
+                        
+                        // ユーザーメッセージを追加
+                        this.messages.push({{
+                            type: 'user',
+                            content: message,
+                            timestamp: new Date()
+                        }});
+                        
+                        input.value = '';
+                        this.renderMessages();
+                        this.showTyping();
+                        
+                        try {{
+                            // APIにメッセージ送信
+                            const response = await fetch('/chat', {{
+                                method: 'POST',
+                                headers: {{ 'Content-Type': 'application/json' }},
+                                body: JSON.stringify({{ message: message }})
+                            }});
+                            
+                            const result = await response.json();
+                            
+                            this.hideTyping();
+                            
+                            if (result.success) {{
+                                this.messages.push({{
+                                    type: 'assistant',
+                                    content: result.response,
+                                    timestamp: new Date()
+                                }});
+                            }} else {{
+                                this.messages.push({{
+                                    type: 'assistant',
+                                    content: '申し訳ございません。エラーが発生しました。',
+                                    timestamp: new Date()
+                                }});
+                            }}
+                            
+                            this.renderMessages();
+                            
+                        }} catch (error) {{
+                            this.hideTyping();
+                            this.messages.push({{
+                                type: 'assistant',
+                                content: 'ネットワークエラーが発生しました。しばらく後で再試行してください。',
+                                timestamp: new Date()
+                            }});
+                            this.renderMessages();
+                        }}
+                    }}
+                    
+                    renderMessages() {{
+                        const container = document.getElementById('chat-messages');
+                        container.innerHTML = '';
+                        
+                        this.messages.forEach(msg => {{
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `chat-message ${{msg.type}}`;
+                            
+                            const bubbleDiv = document.createElement('div');
+                            bubbleDiv.className = `chat-bubble ${{msg.type}}`;
+                            bubbleDiv.innerHTML = msg.content.replace(/\\n/g, '<br>');
+                            
+                            messageDiv.appendChild(bubbleDiv);
+                            container.appendChild(messageDiv);
+                        }});
+                        
+                        // 最新メッセージまでスクロール
+                        container.scrollTop = container.scrollHeight;
+                    }}
+                    
+                    showTyping() {{
+                        document.getElementById('chat-typing').classList.add('show');
+                        const container = document.getElementById('chat-messages');
+                        container.scrollTop = container.scrollHeight;
+                    }}
+                    
+                    hideTyping() {{
+                        document.getElementById('chat-typing').classList.remove('show');
+                    }}
+                    
+                    handleKeyPress(event) {{
+                        if (event.key === 'Enter' && !event.shiftKey) {{
+                            event.preventDefault();
+                            this.sendMessage();
+                        }}
+                    }}
+                }}
+                
+                // グローバルチャットボットインスタンス
+                let chatBot;
+                
+                // ページ読み込み時にチャットボット初期化
+                document.addEventListener('DOMContentLoaded', function() {{
+                    chatBot = new ProfessorChatBot();
+                }});
+                
+                // グローバル関数
+                function toggleChat() {{
+                    if (chatBot) chatBot.toggle();
+                }}
+                
+                function sendChatMessage() {{
+                    if (chatBot) chatBot.sendMessage();
+                }}
+                
+                function handleChatKeyPress(event) {{
+                    if (chatBot) chatBot.handleKeyPress(event);
+                }}
             </script>
         </head>
         <body>
@@ -701,6 +1021,31 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
                             {generate_category_list(EMAIL_CATEGORIES, stats)}
                         </ul>
                     </div>
+                </div>
+            </div>
+            
+            <!-- 🤖 チャットボット -->
+            <button class="chat-float-btn" onclick="toggleChat()">💬</button>
+            <div id="chat-popup" class="chat-popup">
+                <div class="chat-header">
+                    <span>🎓 ProfMail AI アシスタント</span>
+                    <button class="chat-close" onclick="toggleChat()">×</button>
+                </div>
+                <div id="chat-messages" class="chat-messages"></div>
+                <div id="chat-typing" class="chat-typing">
+                    <div class="typing-bubble">
+                        <span class="typing-dots">入力中...</span>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        class="chat-input" 
+                        placeholder="メッセージを入力..."
+                        onkeypress="handleChatKeyPress(event)"
+                    >
+                    <button class="chat-send-btn" onclick="sendChatMessage()">📤</button>
                 </div>
             </div>
         </body>
@@ -784,6 +1129,30 @@ def create_routes(app: FastAPI, email_processor: EmailProcessor):
             return {"success": success}
         except Exception as e:
             return {"success": False, "error": str(e)}
+    
+    @app.post("/chat")
+    async def chat_with_assistant(request: dict):
+        """教授向けAIアシスタントチャット"""
+        try:
+            user_message = request.get("message", "")
+            
+            # チャット機能を使用
+            response = email_processor.get_openai_service().chat_with_professor_assistant(
+                user_message, 
+                email_processor.get_database()
+            )
+            
+            return {
+                "success": True,
+                "response": response,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
     
     @app.get("/debug/slack")
     async def debug_slack():
@@ -1399,6 +1768,181 @@ def _get_common_styles():
         .priority-high .priority-badge { background: linear-gradient(135deg, #ff7675 0%, #e17055 100%); }
         .priority-medium .priority-badge { background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); }
         .priority-low .priority-badge { background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%); }
+        
+        /* 🤖 チャットボット関連スタイル */
+        .chat-float-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.3);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        .chat-float-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(74, 144, 226, 0.4);
+        }
+        .chat-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 350px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(52, 73, 94, 0.15);
+            border: 1px solid #e8f4fd;
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideInUp 0.3s ease;
+        }
+        .chat-popup.open {
+            display: flex;
+        }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        .chat-close:hover {
+            opacity: 1;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #fdfcf5 0%, #f8f9fb 100%);
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            animation: fadeInMessage 0.3s ease;
+        }
+        @keyframes fadeInMessage {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .chat-message.assistant {
+            text-align: left;
+        }
+        .chat-bubble {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 85%;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .chat-bubble.user {
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+            color: white;
+        }
+        .chat-bubble.assistant {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            border: 1px solid #e8f4fd;
+            box-shadow: 0 2px 8px rgba(52, 73, 94, 0.05);
+        }
+        .chat-input-container {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid #e8f4fd;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e8f4fd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .chat-input:focus {
+            border-color: #4a90e2;
+        }
+        .chat-send-btn {
+            background: linear-gradient(135deg, #6bb6ff 0%, #4a90e2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+        }
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        .chat-send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .chat-typing {
+            display: none;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        .chat-typing.show {
+            display: block;
+        }
+        .typing-bubble {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e8f4fd;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .typing-dots {
+            display: inline-block;
+            animation: typingDots 1.5s infinite;
+        }
+        @keyframes typingDots {
+            0%, 60%, 100% { opacity: 0.4; }
+            30% { opacity: 1; }
+        }
     """
 
 def _get_common_script():
@@ -1538,6 +2082,190 @@ def _get_common_script():
             document.getElementById(tabName).classList.add('active');
             document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
         }
+
+        // 🤖 チャットボット機能
+        class ProfessorChatBot {
+            constructor() {
+                this.isOpen = false;
+                this.messages = [];
+                this.init();
+            }
+            
+            init() {
+                // 初回メッセージ
+                this.messages = [{
+                    type: 'assistant',
+                    content: '🎓 こんにちは！ProfMail AIアシスタントです。\\n\\n今日のメール状況を確認したり、特定のメールを検索したりできます。\\n\\n例：「今日やるべきことは？」「高優先度のメールを見せて」「論文査読のメールは？」',
+                    timestamp: new Date()
+                }];
+            }
+            
+            toggle() {
+                const popup = document.getElementById('chat-popup');
+                if (this.isOpen) {
+                    popup.classList.remove('open');
+                    this.isOpen = false;
+                } else {
+                    popup.classList.add('open');
+                    this.isOpen = true;
+                    this.renderMessages();
+                    const input = document.getElementById('chat-input');
+                    if (input) input.focus();
+                }
+            }
+            
+            async sendMessage() {
+                const input = document.getElementById('chat-input');
+                const message = input.value.trim();
+                
+                if (!message) return;
+                
+                // ユーザーメッセージを追加
+                this.messages.push({
+                    type: 'user',
+                    content: message,
+                    timestamp: new Date()
+                });
+                
+                input.value = '';
+                this.renderMessages();
+                this.showTyping();
+                
+                try {
+                    // APIにメッセージ送信
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: message })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    this.hideTyping();
+                    
+                    if (result.success) {
+                        this.messages.push({
+                            type: 'assistant',
+                            content: result.response,
+                            timestamp: new Date()
+                        });
+                    } else {
+                        this.messages.push({
+                            type: 'assistant',
+                            content: '申し訳ございません。エラーが発生しました。',
+                            timestamp: new Date()
+                        });
+                    }
+                    
+                    this.renderMessages();
+                    
+                } catch (error) {
+                    this.hideTyping();
+                    this.messages.push({
+                        type: 'assistant',
+                        content: 'ネットワークエラーが発生しました。しばらく後で再試行してください。',
+                        timestamp: new Date()
+                    });
+                    this.renderMessages();
+                }
+            }
+            
+            renderMessages() {
+                const container = document.getElementById('chat-messages');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                this.messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `chat-message ${msg.type}`;
+                    
+                    const bubbleDiv = document.createElement('div');
+                    bubbleDiv.className = `chat-bubble ${msg.type}`;
+                    bubbleDiv.innerHTML = msg.content.replace(/\\n/g, '<br>');
+                    
+                    messageDiv.appendChild(bubbleDiv);
+                    container.appendChild(messageDiv);
+                });
+                
+                // 最新メッセージまでスクロール
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            showTyping() {
+                const typingElement = document.getElementById('chat-typing');
+                if (typingElement) {
+                    typingElement.classList.add('show');
+                    const container = document.getElementById('chat-messages');
+                    if (container) container.scrollTop = container.scrollHeight;
+                }
+            }
+            
+            hideTyping() {
+                const typingElement = document.getElementById('chat-typing');
+                if (typingElement) {
+                    typingElement.classList.remove('show');
+                }
+            }
+            
+            handleKeyPress(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    this.sendMessage();
+                }
+            }
+        }
+        
+        // グローバルチャットボットインスタンス
+        let chatBot;
+        
+        // ページ読み込み時にチャットボット初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            chatBot = new ProfessorChatBot();
+        });
+        
+        // グローバル関数
+        function toggleChat() {
+            if (chatBot) chatBot.toggle();
+        }
+        
+        function sendChatMessage() {
+            if (chatBot) chatBot.sendMessage();
+        }
+        
+        function handleChatKeyPress(event) {
+            if (chatBot) chatBot.handleKeyPress(event);
+        }
+    """
+
+
+def _get_chat_bot_html():
+    """チャットボットHTML"""
+    return """
+            <!-- 🤖 チャットボット -->
+            <button class="chat-float-btn" onclick="toggleChat()">💬</button>
+            <div id="chat-popup" class="chat-popup">
+                <div class="chat-header">
+                    <span>🎓 ProfMail AI アシスタント</span>
+                    <button class="chat-close" onclick="toggleChat()">×</button>
+                </div>
+                <div id="chat-messages" class="chat-messages"></div>
+                <div id="chat-typing" class="chat-typing">
+                    <div class="typing-bubble">
+                        <span class="typing-dots">入力中...</span>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        class="chat-input" 
+                        placeholder="メッセージを入力..."
+                        onkeypress="handleChatKeyPress(event)"
+                    >
+                    <button class="chat-send-btn" onclick="sendChatMessage()">📤</button>
+                </div>
+            </div>
     """
 
 
@@ -1569,6 +2297,7 @@ def _get_priority_html_template(priority_level: str, priority_jp: str, emails) -
             
             {generate_email_cards(emails) if emails else '<div class="email-card"><div class="email-header"><p>📭 該当するメールがありません</p></div></div>'}
         </div>
+        {_get_chat_bot_html()}
     </body>
     </html>
     """
@@ -1614,6 +2343,7 @@ def _get_completed_html_template(emails) -> str:
                 </table>
             </div>
         </div>
+        {_get_chat_bot_html()}
     </body>
     </html>
     """
@@ -1655,6 +2385,7 @@ def _get_category_html_template(category_name: str, pending_emails, completed_em
                 {generate_email_cards(completed_emails) if completed_emails else '<div class="email-card"><div class="email-header"><p>📭 完了済みメールがありません</p></div></div>'}
             </div>
         </div>
+        {_get_chat_bot_html()}
     </body>
     </html>
     """
@@ -1701,6 +2432,7 @@ def _get_all_emails_html_template(emails) -> str:
                 </table>
             </div>
         </div>
+        {_get_chat_bot_html()}
     </body>
     </html>
     """

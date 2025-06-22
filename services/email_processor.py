@@ -202,3 +202,8 @@ class EmailProcessor:
     def get_database(self) -> ProfessorEmailDatabase:
         """データベースインスタンス取得"""
         return self.db
+    # services/email_processor.py の最後に追加（get_database関数の下）
+
+    def get_openai_service(self) -> OpenAIService:
+        """OpenAIサービスインスタンス取得"""
+        return self.openai_service
