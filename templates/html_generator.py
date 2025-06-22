@@ -4,7 +4,6 @@ HTML生成関数
 from typing import List, Dict, Any
 from utils.helpers import truncate_text
 
-
 def generate_email_cards(emails: List[Dict[str, Any]]) -> str:
     """メールカード生成"""
     if not emails:
@@ -67,6 +66,24 @@ def generate_email_cards(emails: List[Dict[str, Any]]) -> str:
         date = email.get("date", "Unknown Date")
         gmail_link = email.get("gmail_link", "#")
         
+        # メールのステータスに応じてアクションボタンを変更
+        status = email.get("status", "pending")
+        
+        if status == "completed":
+            # 完了済みメールの場合
+            action_buttons = f'''
+                <a href="{gmail_link}" target="_blank" class="btn btn-primary">📧 Gmailで開く</a>
+                <span class="btn btn-completed" style="cursor: default;">✅ 完了済み</span>
+                <button onclick="deleteEmail('{email_id}')" class="btn btn-danger">🗑️ 削除</button>
+            '''
+        else:
+            # 未対応メールの場合
+            action_buttons = f'''
+                <a href="{gmail_link}" target="_blank" class="btn btn-primary">📧 Gmailで開く</a>
+                <button onclick="markCompleted('{email_id}')" class="btn btn-success">✅ 完了</button>
+                <button onclick="deleteEmail('{email_id}')" class="btn btn-danger">🗑️ 削除</button>
+            '''
+        
         card = f'''<div class="email-card">
             <div class="email-header priority-{priority.lower()}">
                 <div class="email-subject">{subject}</div>
@@ -83,15 +100,12 @@ def generate_email_cards(emails: List[Dict[str, Any]]) -> str:
             </div>
             
             <div class="email-actions">
-                <a href="{gmail_link}" target="_blank" class="btn btn-primary">📧 Gmailで開く</a>
-                <button onclick="markCompleted('{email_id}')" class="btn btn-success">✅ 完了</button>
-                <button onclick="deleteEmail('{email_id}')" class="btn btn-danger">🗑️ 削除</button>
+                {action_buttons}
             </div>
         </div>'''
         cards.append(card)
     
     return ''.join(cards)
-
 
 def generate_category_list(categories: Dict[str, str], stats: Dict[str, Any]) -> str:
     """カテゴリリスト生成"""
